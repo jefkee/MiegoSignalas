@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: sleep_eeg
+Version: 0.1
+Requires-Dist: mne>=1.5.1
+Requires-Dist: numpy>=1.24.0
+Requires-Dist: tensorflow>=2.13.0
+Requires-Dist: flask>=2.0.0
+Requires-Dist: flask-cors>=4.0.0
+Requires-Dist: plotly>=5.13.0
+Requires-Dist: pyyaml>=6.0.1
+Requires-Dist: werkzeug>=2.0.0
+Requires-Dist: scikit-learn>=1.0.0

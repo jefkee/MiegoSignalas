@@ -1,0 +1,46 @@
+MiegoSignalas/
+├── docs/                          # Documentation
+│   ├── system_design/            # System design documents
+│   ├── api_docs/                 # API documentation
+│   └── user_guide/              # User documentation
+│
+├── data/
+│   ├── raw/                     # Original EDF files
+│   ├── processed/               # Preprocessed data
+│   └── validation/             # Validation datasets
+│
+├── src/
+│   ├── __init__.py
+│   ├── preprocessing/           # Data preprocessing modules
+│   │   ├── __init__.py
+│   │   ├── eeg_processor.py    # EEG signal processing
+│   │   └── stage_analyzer.py   # Sleep stage analysis
+│   │
+│   ├── models/                 # ML/DL models
+│   │   ├── __init__.py
+│   │   └── classifier.py
+│   │
+│   ├── visualization/          # Visualization tools
+│   │   ├── __init__.py
+│   │   └── plots.py
+│   │
+│   └── utils/                  # Utility functions
+│       ├── __init__.py
+│       └── data_utils.py
+│
+├── notebooks/                  # Jupyter notebooks
+│   ├── exploration/           # Data exploration
+│   ├── development/           # Development experiments
+│   └── evaluation/            # System evaluation
+│
+├── tests/                     # Unit and integration tests
+│   ├── test_preprocessing.py
+│   └── test_models.py
+│
+├── results/                   # Results and outputs
+│   ├── figures/
+│   └── models/
+│
+├── requirements.txt           # Project dependencies
+├── setup.py                  # Package installation
+└── README.md                 # Project documentation
