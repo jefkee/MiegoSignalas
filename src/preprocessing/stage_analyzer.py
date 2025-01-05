@@ -1,32 +1,31 @@
 import mne
 import numpy as np
-from typing import Dict
 
 class StageAnalyzer:
-    """
-    Analyzes sleep stages from hypnogram data
-    """
-    # Sleep stage mapping according to AASM standards
-    STAGE_MAPPING = {
-        'Sleep stage W': 0,    # Wake
-        'Sleep stage 1': 1,    # N1
-        'Sleep stage 2': 2,    # N2
-        'Sleep stage 3': 3,    # N3 (combining 3 & 4)
-        'Sleep stage 4': 3,    # N3 (combining 3 & 4)
-        'Sleep stage R': 4,    # REM
-        'Movement time': -1,   # Will be excluded
-        'Sleep stage ?': -1    # Will be excluded
-    }
-
-    def analyze_hypnogram(self, annotations: mne.Annotations) -> Dict:
-        """
-        Analyze sleep stage distribution
-        """
-        stats = {}
-        for annot in annotations:
-            if annot['description'] in self.STAGE_MAPPING:
-                stage = annot['description']
-                if stage not in stats:
-                    stats[stage] = 0
-                stats[stage] += 1
-        return stats
+    def __init__(self):
+        self.stage_map = {
+            'Sleep stage W': 0,
+            'Sleep stage 1': 1,
+            'Sleep stage 2': 2,
+            'Sleep stage 3': 3,
+            'Sleep stage 4': 3,  # Combine stage 3 and 4
+            'Sleep stage R': 4
+        }
+        
+    def analyze_hypnogram(self, hypno_file):
+        """Analyze hypnogram file and extract sleep stages"""
+        try:
+            # Load annotations
+            annotations = mne.read_annotations(hypno_file)
+            
+            # Extract stages
+            stages = []
+            for description in annotations.description:
+                if description in self.stage_map:
+                    stages.append(self.stage_map[description])
+                    
+            return np.array(stages)
+            
+        except Exception as e:
+            print(f"Error analyzing hypnogram: {str(e)}")
+            raise

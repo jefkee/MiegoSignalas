@@ -1,43 +1,38 @@
 import os
+import mne
 
-def check_data_directory(data_dir):
-    """Check and print files in data directory"""
-    print(f"\nChecking directory: {data_dir}")
-    print("-" * 50)
-    
-    if not os.path.exists(data_dir):
-        print(f"Error: Directory {data_dir} does not exist!")
-        return
-    
-    files = os.listdir(data_dir)
-    print(f"Total files found: {len(files)}")
-    
-    # Check all possible file patterns
-    psg_files = [f for f in files if 'PSG' in f]
-    hypno_patterns = ['Hypnogram', 'hypnogram', 'HYP', 'hyp']
-    
-    print(f"\nPSG files ({len(psg_files)}):")
-    for f in psg_files:
-        print(f"  - {f}")
-        base = f.replace('-PSG.edf', '')
+def validate_edf_file(file_path):
+    """Validate EDF file format and content"""
+    try:
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return False, "File does not exist"
+            
+        # Check file extension
+        if not file_path.endswith('.edf'):
+            return False, "Invalid file format (must be .edf)"
+            
+        # Try to load file with MNE
+        raw = mne.io.read_raw_edf(file_path, preload=True)
         
-        # Check for corresponding hypnogram with any pattern
-        hypno_found = False
-        for pattern in hypno_patterns:
-            possible_names = [
-                f"{base}-{pattern}.edf",
-                f"{base.replace('0', 'J')}-{pattern}.edf",
-                f"{base}{pattern}.edf",
-                f"{base}.{pattern}"
-            ]
-            for hypno_name in possible_names:
-                if hypno_name in files:
-                    print(f"    Found hypnogram: {hypno_name}")
-                    hypno_found = True
-                    break
-        if not hypno_found:
-            print(f"    No hypnogram found for {base}")
-
-if __name__ == "__main__":
-    data_dir = os.path.join('data', 'raw')
-    check_data_directory(data_dir) 
+        # Check if file has data
+        if raw.n_times == 0:
+            return False, "File contains no data"
+            
+        return True, "File is valid"
+        
+    except Exception as e:
+        return False, f"Error validating file: {str(e)}"
+        
+def check_required_channels(raw_data, required_channels):
+    """Check if all required channels are present"""
+    missing_channels = []
+    
+    for channel in required_channels:
+        if channel not in raw_data.ch_names:
+            missing_channels.append(channel)
+            
+    if missing_channels:
+        return False, f"Missing required channels: {', '.join(missing_channels)}"
+    
+    return True, "All required channels present" 

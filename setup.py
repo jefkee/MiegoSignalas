@@ -10,9 +10,8 @@ setup(
         'tensorflow>=2.13.0',
         'flask>=2.0.0',
         'flask-cors>=4.0.0',
-        'plotly>=5.13.0',
-        'pyyaml>=6.0.1',
-        'werkzeug>=2.0.0',
+        'matplotlib>=3.7.0',
+        'scipy>=1.9.0',
         'scikit-learn>=1.0.0'
     ]
 ) 

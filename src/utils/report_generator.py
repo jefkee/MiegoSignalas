@@ -18,7 +18,7 @@ class ReportGenerator:
         stages = analysis.get('stages', [])
         if not stages:
             return ["Unable to analyze sleep patterns. Please ensure recording quality."]
-
+        
         # Calculate stage percentages
         total_epochs = len(stages)
         stage_counts = np.bincount(stages, minlength=5)

@@ -6,8 +6,7 @@ class DataValidator:
         """Validate EEG data quality"""
         checks = {
             'missing_values': np.isnan(data).sum() == 0,
-            'signal_range': np.abs(data).max() < 500,  # typical EEG range
-            'length': len(data) > 1000  # minimum required length
+            'signal_range': np.abs(data).max() < 500
         }
         return all(checks.values()), checks
     

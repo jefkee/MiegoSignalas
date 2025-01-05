@@ -1,35 +1,39 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, send_from_directory
 from flask_cors import CORS
 from src.web.api.routes import api
+import os
 
-def create_app():
-    app = Flask(__name__, 
-                template_folder='templates',
-                static_folder='static')
-    
-    # Configure CORS
-    CORS(app, resources={
-        r"/api/*": {
-            "origins": "*",
-            "methods": ["GET", "POST", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"]
-        }
-    })
-    
-    # Register blueprints
-    app.register_blueprint(api, url_prefix='/api')
-    
-    @app.route('/')
-    def index():
-        return render_template('index.html')
-    
-    # Create required directories
-    import os
-    os.makedirs('uploads', exist_ok=True)
-    os.makedirs('models', exist_ok=True)
-    
-    return app
+app = Flask(__name__, 
+    static_folder='static',
+    template_folder='templates'
+)
+CORS(app)
+
+# Register blueprints
+app.register_blueprint(api, url_prefix='/api')
+
+# Root route
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# Favicon route
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'favicon.svg',
+        mimetype='image/svg+xml'
+    )
+
+# Error handlers
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template('500.html'), 500
 
 if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True, host='0.0.0.0', port=5000) 
+    app.run(debug=True, port=5000) 

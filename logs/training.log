@@ -137,3 +137,6 @@
 2024-12-27 23:57:03,770 - training - INFO - Model saved to models\sleep_classifier.h5
 2024-12-28 00:02:04,179 - training - INFO - Starting model training
 2024-12-28 00:02:04,179 - training - INFO - Loading dataset...
+2025-01-04 22:03:05,269 - training - INFO - Starting model training
+2025-01-04 22:03:05,270 - training - INFO - Loading dataset...
+2025-01-04 22:03:12,342 - training - ERROR - Error during training: No valid data loaded

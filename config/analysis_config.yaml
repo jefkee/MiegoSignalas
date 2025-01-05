@@ -1,21 +1,12 @@
 model:
-  architecture: "deep_sleep_net"
   input_shape: [3000, 7]  # 30 seconds @ 100Hz, 7 channels
   batch_size: 32
   epochs: 100
+  learning_rate: 0.001
 
 preprocessing:
   sampling_rate: 100
   filter:
     low_freq: 0.3
     high_freq: 35
-  epoch_duration: 30  # seconds
-
-quality_thresholds:
-  sleep_efficiency: 85
-  sleep_latency: 30
-  rem_percentage: 20
-
-visualization:
-  hypnogram_height: 400
-  color_scheme: "default" 
+  epoch_duration: 30  # seconds 
