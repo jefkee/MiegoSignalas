@@ -2,6 +2,7 @@ import numpy as np
 import mne
 from src.utils.data_utils import find_matching_files
 from src.config.settings import REQUIRED_CHANNELS, PREPROCESSING_PARAMS
+import os
 
 class Dataset:
     def __init__(self, data_dir):
@@ -13,23 +14,67 @@ class Dataset:
         self.lowpass = PREPROCESSING_PARAMS['lowpass']
         self.highpass = PREPROCESSING_PARAMS['highpass']
         
-    def load_training_data(self):
-        """Load and preprocess PSG and hypnogram data for training"""
-        X = []
-        y = []
+    def load_training_data(self, batch_size=10):
+        """Load and preprocess PSG and hypnogram data for training in batches"""
+        X_all = []
+        y_all = []
         
         # Find matching PSG and hypnogram files
         matching_files = find_matching_files(self.data_dir)
+        total_files = len(matching_files)
         
-        for psg_file, hypno_file in matching_files:
+        print(f"\nFound {total_files} matching files")
+        
+        # Process files in batches
+        for i in range(0, total_files, batch_size):
+            batch_files = matching_files[i:i + batch_size]
+            print(f"\nProcessing batch {i//batch_size + 1}/{(total_files + batch_size - 1)//batch_size}")
+            
+            X_batch, y_batch = self._process_file_batch(batch_files)
+            
+            if len(X_batch) > 0:
+                X_all.extend(X_batch)
+                y_all.extend(y_batch)
+                
+            # Clear memory
+            del X_batch
+            del y_batch
+            
+        if len(X_all) == 0:
+            return np.array([]), np.array([])
+            
+        # Convert to numpy arrays and reshape for the model
+        X = np.array(X_all)
+        y = np.array(y_all)
+        
+        # Clear memory
+        del X_all
+        del y_all
+        
+        # Reshape to (samples, timesteps, channels)
+        X = np.transpose(X, (0, 2, 1))
+        
+        print(f"\nLoaded {len(X)} segments with shape {X.shape}")
+        print(f"Label distribution: {np.bincount(y)}")
+        
+        return X, y
+        
+    def _process_file_batch(self, file_batch):
+        """Process a batch of files"""
+        X_batch = []
+        y_batch = []
+        
+        for psg_file, hypno_file in file_batch:
             try:
-                # Load PSG data
-                raw = mne.io.read_raw_edf(psg_file, preload=True)
+                print(f"\nProcessing {os.path.basename(psg_file)}")
                 
-                # Print available channels
-                print(f"\nAvailable channels in {psg_file}:")
-                print(raw.ch_names)
-                
+                # Load PSG data with timeout
+                try:
+                    raw = mne.io.read_raw_edf(psg_file, preload=True)
+                except Exception as e:
+                    print(f"Error loading {psg_file}: {str(e)}")
+                    continue
+                    
                 # Check channels
                 if not all(ch in raw.ch_names for ch in self.required_channels):
                     missing = [ch for ch in self.required_channels if ch not in raw.ch_names]
@@ -39,8 +84,12 @@ class Dataset:
                 # Select and reorder channels
                 raw.pick_channels(self.required_channels)
                 
-                # Apply filters
-                raw.filter(self.highpass, self.lowpass, method='iir')
+                # Apply filters with timeout
+                try:
+                    raw.filter(self.highpass, self.lowpass, method='iir')
+                except Exception as e:
+                    print(f"Error filtering {psg_file}: {str(e)}")
+                    continue
                 
                 # Get raw data
                 data = raw.get_data()
@@ -52,33 +101,31 @@ class Dataset:
                     data[i] = (data[i] - mean) / (std + 1e-8)
                 
                 # Load hypnogram
-                annot = mne.read_annotations(hypno_file)
+                try:
+                    annot = mne.read_annotations(hypno_file)
+                except Exception as e:
+                    print(f"Error loading hypnogram {hypno_file}: {str(e)}")
+                    continue
                 
                 # Create segments and labels
                 segments, labels = self._create_segments(data, annot, raw.info['sfreq'])
                 
                 if segments is not None and labels is not None:
-                    X.extend(segments)
-                    y.extend(labels)
+                    X_batch.extend(segments)
+                    y_batch.extend(labels)
+                    print(f"Successfully processed {len(segments)} segments")
                     
+                # Clear memory
+                del raw
+                del data
+                del segments
+                del labels
+                
             except Exception as e:
                 print(f"Error processing {psg_file}: {str(e)}")
                 continue
                 
-        if len(X) == 0:
-            return np.array([]), np.array([])
-            
-        # Convert to numpy arrays and reshape for the model
-        X = np.array(X)
-        y = np.array(y)
-        
-        # Reshape to (samples, timesteps, channels)
-        X = np.transpose(X, (0, 2, 1))
-        
-        print(f"\nLoaded {len(X)} segments with shape {X.shape}")
-        print(f"Label distribution: {np.bincount(y)}")
-        
-        return X, y
+        return X_batch, y_batch
         
     def _create_segments(self, data, annot, sfreq):
         """Create segments from raw data and annotations"""

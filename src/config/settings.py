@@ -22,28 +22,29 @@ REQUIRED_CHANNELS = [
 
 # Model parameters
 MODEL_PARAMS = {
-    'input_shape': (1500, len(REQUIRED_CHANNELS)),  # 15 seconds at 100Hz (reduced from 30s)
+    'window_size': 1000,  # 10 seconds at 100Hz
+    'channels': REQUIRED_CHANNELS,
     'n_classes': 5,  # W, N1, N2, N3, REM
-    'filters': [16, 32, 64],  # Reduced filter sizes
-    'kernel_size': 5,  # Reduced kernel size
-    'pool_size': 4,  # Increased pool size for faster reduction
-    'lstm_units': 64,  # Reduced LSTM units
-    'dropout_rate': 0.2
+    'filters': [32, 64],  # Increased filters for better feature detection
+    'kernel_size': 5,  # Increased kernel for better temporal patterns
+    'pool_size': 2,  # Smaller pooling to preserve temporal information
+    'lstm_units': 32,  # Increased units for better sequence learning
+    'dropout_rate': 0.3,
+    'learning_rate': 0.0005  # Reduced for better stability
 }
 
 # Training parameters  
 TRAINING_PARAMS = {
-    'batch_size': 128,  # Increased batch size for faster processing
-    'epochs': 50,  # Reduced epochs
-    'validation_split': 0.2,
-    'learning_rate': 0.001  # Slightly increased for faster convergence
+    'batch_size': 32,  # Smaller batches for better generalization
+    'epochs': 10,  # Increased epochs for better learning
+    'validation_split': 0.2
 }
 
 # Preprocessing parameters
 PREPROCESSING_PARAMS = {
-    'window_size': 15,  # seconds (reduced from 30s)
+    'window_size': 10,  # seconds - matches model window_size
     'sampling_rate': 100,  # Hz
-    'overlap': 0.25,  # Reduced overlap for fewer segments
+    'overlap': 0.5,  # Added overlap for better temporal continuity
     'lowpass': 30,  # Hz
     'highpass': 0.3  # Hz
 } 
