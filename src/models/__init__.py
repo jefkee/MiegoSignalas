@@ -1,5 +1,4 @@
-from .classifier import SleepClassifier
-from .dataset import Dataset
 from .sleep_analyzer import SleepAnalyzer
+from .trainer import ModelTrainer
 
-__all__ = ['SleepClassifier', 'Dataset', 'SleepAnalyzer']
+__all__ = ['SleepAnalyzer']

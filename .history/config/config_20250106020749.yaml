@@ -1,0 +1,11 @@
+preprocessing:
+  sampling_rate: 100
+  filter:
+    low_freq: 0.3
+    high_freq: 35
+
+model:
+  input_shape: [3000, 7]  # 30s @ 100Hz, 7 kanalai
+  batch_size: 32
+  epochs: 100
+  learning_rate: 0.001 

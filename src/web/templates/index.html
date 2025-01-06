@@ -172,268 +172,327 @@
             100% { transform: rotate(360deg); }
         }
 
-        .chart-container {
-            margin: 20px 0;
-            text-align: center;
-            background-color: #1e1e1e;
-            padding: 20px;
-            border-radius: 4px;
-        }
-        
-        .chart-container img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 4px;
-            background-color: #1e1e1e;
-        }
-        
-        .sleep-stages {
-            background-color: #1e1e1e;
-            padding: 20px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        
         .chart-explanation {
-            background-color: #2d2d2d;
+            background: #f8f9fa;
             padding: 15px;
             margin: 15px 0;
-            border-radius: 4px;
-            border-left: 4px solid #0078d4;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
         }
         
         .chart-explanation p {
-            color: #cccccc;
             margin-bottom: 10px;
+            color: #333;
         }
         
         .chart-explanation ul {
             margin: 0;
             padding-left: 20px;
-            color: #cccccc;
         }
         
         .chart-explanation li {
             margin: 5px 0;
-            color: #cccccc;
+            color: #666;
         }
         
         .chart-explanation strong {
-            color: #ffffff;
-        }
-
-        .stage-distribution {
-            background: #f8f9fa;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 8px;
-        }
-        
-        .stage-percentages {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .stage-percentages p {
-            margin: 0;
-            padding: 8px;
-            background: white;
-            border-radius: 4px;
-            text-align: center;
-        }
-
-        .analysis-section {
-            margin: 30px 0;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .chart-container {
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .chart-container img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .timing-info {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 30px;
-        }
-        
-        .timing-info ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .timing-info li {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .timing-info li:last-child {
-            border-bottom: none;
-        }
-
-        .interpretation {
-            color: #cccccc;
-            font-style: italic;
-            margin-top: 10px;
-            margin-bottom: 20px;
+            color: #333;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Miego analizė</h1>
-        
-        <div class="upload-section">
-            <h2>Upload Sleep Recording</h2>
-            <div class="file-instructions">
-                <h3>Required Files:</h3>
-                <div class="file-requirement">
-                    <span class="file-icon">📊</span>
-                    <div class="file-info">
-                        <p class="file-name">PSG File (required)</p>
-                        <p class="file-desc">Name must end with '-PSG.edf' (Sleep recording)</p>
+        <!-- Analysis Tab -->
+        <div class="tab-content active">
+            <div class="upload-section">
+                <h2>Upload Sleep Recording</h2>
+                <div class="file-instructions">
+                    <h3>Required Files:</h3>
+                    <div class="file-requirement">
+                        <span class="file-icon">📊</span>
+                        <div class="file-info">
+                            <p class="file-name">PSG File (required)</p>
+                            <p class="file-desc">Name must end with '-PSG.edf' (Sleep recording)</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <form id="upload-form" enctype="multipart/form-data">
-                <div class="upload-container">
-                    <div class="file-upload">
-                        <label>PSG File:</label>
-                        <input type="file" id="psg_file" accept=".edf" required>
-                        <div id="psg-validation" class="validation-message"></div>
+                
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="upload-container">
+                        <div class="file-upload">
+                            <label>PSG File:</label>
+                            <input type="file" id="psg-file" accept=".edf" required>
+                            <div id="psg-validation" class="validation-message"></div>
+                        </div>
                     </div>
-                    <button type="submit">Analyze</button>
-                </div>
-            </form>
-            
-            <div id="error-container" class="error-message" style="display: none;"></div>
-        </div>
-
-        <div id="loading" style="display: none;">
-            <div class="progress-indicator">
-                <div class="spinner"></div>
-                <p class="progress-text">Analyzing sleep recording...</p>
-            </div>
-        </div>
-
-        <div id="analysis-results" style="display: none;">
-            <h2>Analysis Results</h2>
-            
-            <div class="sleep-quality">
-                <h3>Sleep Quality</h3>
-                <div class="score" id="quality-value"></div>
-                <div class="interpretation" id="quality-interpretation"></div>
+                </form>
+                <div id="error-container" class="error-message" style="display: none;"></div>
             </div>
 
-            <div class="sleep-stages analysis-section">
-                <h3>Sleep Stage Distribution</h3>
-                <div class="chart-container">
-                    <img id="distribution-chart" alt="Sleep Stage Distribution" style="max-width: 100%; height: auto;">
-                </div>
-                <div class="chart-explanation">
-                    <p>This chart shows how your sleep time was distributed across different stages:</p>
-                    <ul>
-                        <li><strong>Wake:</strong> Time spent awake during recording</li>
-                        <li><strong>Light Sleep (N1):</strong> Transition between wake and deeper sleep</li>
-                        <li><strong>Intermediate Sleep (N2):</strong> Makes up most of your sleep</li>
-                        <li><strong>Deep Sleep (N3):</strong> Most restorative stage</li>
-                        <li><strong>REM:</strong> Dream sleep, important for memory and learning</li>
-                    </ul>
-                </div>
-                
-                <h3>Sleep Throughout Night</h3>
-                <div class="chart-container">
-                    <img id="hypnogram-chart" alt="Hypnogram" style="max-width: 100%; height: auto;">
-                </div>
-                <div class="chart-explanation">
-                    <p>This graph shows your sleep progression throughout the night:</p>
-                    <ul>
-                        <li>Ideally, you should see 4-5 complete sleep cycles</li>
-                        <li>Each cycle typically lasts 90-120 minutes</li>
-                        <li>More deep sleep occurs in the first half of the night</li>
-                        <li>More REM sleep occurs in the second half</li>
-                    </ul>
-                </div>
-                
-                <h3>Sleep Stage Transitions</h3>
-                <div class="chart-container">
-                    <img id="transitions-chart" alt="Stage Transitions" style="max-width: 100%; height: auto;">
-                </div>
-                <div class="chart-explanation">
-                    <p>This heatmap shows how you transition between sleep stages:</p>
-                    <ul>
-                        <li>Frequent transitions between Wake and Light sleep may indicate sleep fragmentation</li>
-                        <li>Natural progression: Wake → Light → Medium → Deep → REM</li>
-                        <li>Many transitions to Wake from deep sleep might indicate sleep disturbances</li>
-                    </ul>
-                </div>
-                
-                <h3>Hourly Sleep Pattern</h3>
-                <div class="chart-container">
-                    <img id="hourly-chart" alt="Hourly Distribution" style="max-width: 100%; height: auto;">
-                </div>
-                <div class="chart-explanation">
-                    <p>This chart shows how your sleep stages are distributed each hour:</p>
-                    <ul>
-                        <li>First hours typically show more deep sleep</li>
-                        <li>REM periods usually get longer as the night progresses</li>
-                        <li>Wake periods are normal but should be brief</li>
-                        <li>Pattern should show clear sleep cycles (90-120 minutes each)</li>
-                    </ul>
-                </div>
-                
-                <h3>Brain Activity Patterns</h3>
-                <div class="chart-container">
-                    <img id="spectral-chart" alt="Spectral Density" style="max-width: 100%; height: auto;">
-                </div>
-                <div class="chart-explanation">
-                    <p>This graph shows your brain wave patterns:</p>
-                    <ul>
-                        <li><strong>Delta waves (0.5-4 Hz):</strong> Indicate deep sleep</li>
-                        <li><strong>Theta waves (4-8 Hz):</strong> Present in light sleep</li>
-                        <li><strong>Alpha waves (8-13 Hz):</strong> Relaxed wakefulness</li>
-                        <li><strong>Beta waves (13-30 Hz):</strong> Active wakefulness</li>
-                    </ul>
+            <div id="loading">
+                <p>Analyzing recording... This may take several minutes for large files. Please wait.</p>
+                <div class="progress-indicator">
+                    <div class="spinner"></div>
+                    <p class="progress-text">Processing your recording...</p>
                 </div>
             </div>
 
-            <div class="recommendations analysis-section">
-                <h3>Recommendations</h3>
-                <ul id="recommendations-list"></ul>
-            </div>
+            <div id="analysis-results" style="display: none;">
+                <h2>Analysis Results</h2>
+                
+                <div class="quality-score">
+                    <h3>Sleep Quality</h3>
+                    <div id="quality-value"></div>
+                    <div id="quality-interpretation"></div>
+                </div>
 
-            <div class="timing-info">
-                <h3>Recording Information</h3>
-                <ul>
-                    <li>Recording Start: <span id="recording-start"></span></li>
-                    <li>Total Recording Duration: <span id="total-duration"></span></li>
-                    <li>Total Sleep Time: <span id="total-sleep-time"></span></li>
-                    <li>Sleep Onset Time: <span id="sleep-onset"></span></li>
-                    <li>Wake Time: <span id="wake-time"></span></li>
-                    <li>Sleep Efficiency: <span id="sleep-efficiency"></span></li>
-                </ul>
+                <div class="sleep-stages">
+                    <h3>Sleep Stages Distribution</h3>
+                    <img id="distribution-chart" alt="Sleep Stage Distribution">
+                    <div class="chart-explanation">
+                        <p>This chart shows how your sleep time was distributed across different stages:</p>
+                        <ul>
+                            <li><strong>Wake:</strong> Time spent awake during recording</li>
+                            <li><strong>Light Sleep (N1):</strong> Transition between wake and deeper sleep</li>
+                            <li><strong>Intermediate Sleep (N2):</strong> Makes up most of your sleep</li>
+                            <li><strong>Deep Sleep (N3):</strong> Most restorative stage</li>
+                            <li><strong>REM:</strong> Dream sleep, important for memory and learning</li>
+                        </ul>
+                    </div>
+                    
+                    <h3>Sleep Throughout Night</h3>
+                    <img id="hypnogram-chart" alt="Hypnogram">
+                    <div class="chart-explanation">
+                        <p>This graph shows your sleep progression throughout the night:</p>
+                        <ul>
+                            <li>Ideally, you should see 4-5 complete sleep cycles</li>
+                            <li>Each cycle typically lasts 90-120 minutes</li>
+                            <li>More deep sleep occurs in the first half of the night</li>
+                            <li>More REM sleep occurs in the second half</li>
+                        </ul>
+                    </div>
+                    
+                    <h3>Sleep Stage Transitions</h3>
+                    <img id="transitions-chart" alt="Stage Transitions">
+                    <div class="chart-explanation">
+                        <p>This heatmap shows how you transition between sleep stages:</p>
+                        <ul>
+                            <li>Frequent transitions between Wake and Light sleep may indicate sleep fragmentation</li>
+                            <li>Natural progression: Wake → Light → Medium → Deep → REM</li>
+                            <li>Many transitions to Wake from deep sleep might indicate sleep disturbances</li>
+                        </ul>
+                    </div>
+                    
+                    <h3>Hourly Sleep Pattern</h3>
+                    <img id="hourly-chart" alt="Hourly Distribution">
+                    <div class="chart-explanation">
+                        <p>This chart shows how your sleep stages are distributed each hour:</p>
+                        <ul>
+                            <li>First hours typically show more deep sleep</li>
+                            <li>REM periods usually get longer as the night progresses</li>
+                            <li>Wake periods are normal but should be brief</li>
+                            <li>Pattern should show clear sleep cycles (90-120 minutes each)</li>
+                        </ul>
+                    </div>
+                    
+                    <h3>Brain Activity Patterns</h3>
+                    <img id="spectral-chart" alt="Spectral Density">
+                    <div class="chart-explanation">
+                        <p>This graph shows your brain wave patterns:</p>
+                        <ul>
+                            <li><strong>Delta waves (0.5-4 Hz):</strong> Indicate deep sleep</li>
+                            <li><strong>Theta waves (4-8 Hz):</strong> Present in light sleep</li>
+                            <li><strong>Alpha waves (8-13 Hz):</strong> Relaxed wakefulness</li>
+                            <li><strong>Beta waves (13-30 Hz):</strong> Active wakefulness</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="recommendations">
+                    <h3>Recommendations</h3>
+                    <ul id="recommendations-list"></ul>
+                </div>
+
+                <div class="timing-info">
+                    <h3>Recording Information</h3>
+                    <ul>
+                        <li>Recording Start: <span id="recording-start"></span></li>
+                        <li>Total Recording Duration: <span id="total-duration"></span></li>
+                        <li>Total Sleep Time: <span id="total-sleep-time"></span></li>
+                        <li>Sleep Onset Time: <span id="sleep-onset"></span></li>
+                        <li>Wake Time: <span id="wake-time"></span></li>
+                        <li>Sleep Efficiency: <span id="sleep-efficiency"></span></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="/static/js/main.js"></script>
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+
+        function validateFiles() {
+            const psgFile = document.getElementById('psg-file').files[0];
+            
+            let isValid = true;
+            
+            // Validate PSG file
+            if (psgFile) {
+                const psgValidation = document.getElementById('psg-validation');
+                if (psgFile.name.includes('-PSG.edf')) {
+                    psgValidation.className = 'validation-message success';
+                    psgValidation.textContent = '✓ Valid PSG file';
+                    psgValidation.style.display = 'block';
+                    // Auto-submit form when valid file is selected
+                    document.getElementById('upload-form').dispatchEvent(new Event('submit'));
+                } else {
+                    psgValidation.className = 'validation-message error';
+                    psgValidation.textContent = '✗ File must end with -PSG.edf';
+                    psgValidation.style.display = 'block';
+                    isValid = false;
+                }
+            }
+        }
+
+        // Add file change listeners
+        document.getElementById('psg-file').addEventListener('change', validateFiles);
+
+        // Update form submission
+        document.getElementById('upload-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const psgFile = document.getElementById('psg-file').files[0];
+            const errorContainer = document.getElementById('error-container');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('analysis-results');
+            
+            try {
+                loading.style.display = 'block';
+                results.style.display = 'none';
+                errorContainer.style.display = 'none';
+                
+                const formData = new FormData();
+                formData.append('psg_file', psgFile);
+                
+                const response = await fetchWithTimeout('http://localhost:5000/api/analyze', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {},
+                    timeout: 300000
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok || data.error) {
+                    throw new Error(data.error || `Error: ${response.statusText}`);
+                }
+                
+                console.log('Response data:', data);  // Debug log
+                
+                if (!data.sleep_quality || !data.visualizations) {
+                    throw new Error('Invalid response format from server');
+                }
+                
+                // Display results
+                document.getElementById('quality-value').textContent = `Score: ${data.sleep_quality.score}`;
+                document.getElementById('quality-interpretation').textContent = data.sleep_quality.interpretation;
+                
+                // Display visualizations (with error handling)
+                const visualizations = data.visualizations;
+                try {
+                    if (visualizations.distribution) {
+                        document.getElementById('distribution-chart').src = `data:image/png;base64,${visualizations.distribution}`;
+                    }
+                    if (visualizations.hypnogram) {
+                        document.getElementById('hypnogram-chart').src = `data:image/png;base64,${visualizations.hypnogram}`;
+                    }
+                    if (visualizations.transitions) {
+                        document.getElementById('transitions-chart').src = `data:image/png;base64,${visualizations.transitions}`;
+                    }
+                    if (visualizations.hourly_distribution) {
+                        document.getElementById('hourly-chart').src = `data:image/png;base64,${visualizations.hourly_distribution}`;
+                    }
+                    if (visualizations.spectral_density) {
+                        document.getElementById('spectral-chart').src = `data:image/png;base64,${visualizations.spectral_density}`;
+                    }
+                } catch (e) {
+                    console.error('Error displaying visualizations:', e);
+                    errorContainer.textContent = 'Error displaying visualizations. Some charts may not be available.';
+                    errorContainer.style.display = 'block';
+                }
+                
+                // Update recording information (with error handling)
+                try {
+                    const recordingInfo = data.recording_info || {};
+                    document.getElementById('recording-start').textContent = recordingInfo.start_time || 'Not available';
+                    document.getElementById('total-duration').textContent = recordingInfo.duration ? `${recordingInfo.duration.toFixed(1)} minutes` : 'Not available';
+                    document.getElementById('total-sleep-time').textContent = recordingInfo.sleep_time ? `${recordingInfo.sleep_time.toFixed(1)} minutes` : 'Not available';
+                    document.getElementById('sleep-onset').textContent = recordingInfo.sleep_onset ? `${recordingInfo.sleep_onset.toFixed(1)} minutes` : 'Not available';
+                    document.getElementById('wake-time').textContent = recordingInfo.wake_time ? `${recordingInfo.wake_time.toFixed(1)} minutes` : 'Not available';
+                    document.getElementById('sleep-efficiency').textContent = recordingInfo.efficiency ? `${recordingInfo.efficiency.toFixed(1)}%` : 'Not available';
+                } catch (e) {
+                    console.error('Error displaying recording info:', e);
+                }
+
+                // Display recommendations
+                const recList = document.getElementById('recommendations-list');
+                recList.innerHTML = '';
+                if (data.recommendations && data.recommendations.length > 0) {
+                    data.recommendations.forEach(rec => {
+                        const li = document.createElement('li');
+                        li.textContent = rec;
+                        recList.appendChild(li);
+                    });
+                } else {
+                    const li = document.createElement('li');
+                    li.textContent = 'No specific recommendations available';
+                    recList.appendChild(li);
+                }
+
+                results.style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+                if (error.name === 'AbortError') {
+                    errorContainer.textContent = 'Analysis is taking longer than expected. The file might be too large or the server might be busy. Please try again.';
+                } else {
+                    errorContainer.textContent = error.message;
+                }
+                errorContainer.style.display = 'block';
+                results.style.display = 'none';
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        async function fetchWithTimeout(resource, options = {}) {
+            const { timeout = 300000 } = options;
+            
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(resource, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(id);
+                return response;
+            } catch (error) {
+                clearTimeout(id);
+                if (error.name === 'AbortError') {
+                    error.message = 'Analysis is taking longer than expected. The file might be too large or the server might be busy. Please try again.';
+                    throw error;
+                }
+                throw error;
+            }
+        }
+    </script>
 </body>
 </html> 

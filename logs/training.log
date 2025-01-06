@@ -137,6 +137,272 @@
 2024-12-27 23:57:03,770 - training - INFO - Model saved to models\sleep_classifier.h5
 2024-12-28 00:02:04,179 - training - INFO - Starting model training
 2024-12-28 00:02:04,179 - training - INFO - Loading dataset...
-2025-01-04 22:03:05,269 - training - INFO - Starting model training
-2025-01-04 22:03:05,270 - training - INFO - Loading dataset...
-2025-01-04 22:03:12,342 - training - ERROR - Error during training: No valid data loaded
+2025-01-05 22:36:55,776 - training - INFO - Starting model training
+2025-01-05 22:36:55,777 - training - INFO - Loading dataset...
+2025-01-05 22:37:07,756 - training - ERROR - Error during training: No valid data loaded
+2025-01-05 22:38:54,157 - training - INFO - Starting model training
+2025-01-05 22:38:54,160 - training - INFO - Loading dataset...
+2025-01-05 22:39:06,476 - training - ERROR - Error during training: No valid data loaded. Check that PSG files have matching hypnograms.
+2025-01-05 22:40:22,378 - training - INFO - Starting model training
+2025-01-05 22:40:22,378 - training - INFO - Loading dataset...
+2025-01-05 22:40:34,994 - training - ERROR - Error during training: No valid data loaded. Check that PSG files have matching hypnograms.
+2025-01-05 22:41:47,531 - training - INFO - Starting model training
+2025-01-05 22:41:47,532 - training - INFO - Loading dataset...
+2025-01-05 22:42:07,237 - training - INFO - Dataset loaded: 1196 samples
+2025-01-05 22:42:07,238 - training - INFO - Class weights:
+2025-01-05 22:42:07,239 - training - INFO - Class 0: 1.7066
+2025-01-05 22:42:07,239 - training - INFO - Class 1: 0.9217
+2025-01-05 22:42:07,240 - training - INFO - Class 2: 0.7258
+2025-01-05 22:42:07,240 - training - INFO - Class 3: 0.6850
+2025-01-05 22:42:07,241 - training - INFO - Class 4: 2.5464
+2025-01-05 22:47:42,067 - training - INFO - Starting model training
+2025-01-05 22:47:42,068 - training - INFO - Loading dataset...
+2025-01-05 22:48:01,645 - training - INFO - Dataset loaded: 1196 samples
+2025-01-05 22:48:01,645 - training - INFO - 
+Detailed class distribution:
+2025-01-05 22:48:01,646 - training - INFO - Class 0: 134 samples (11.20%)
+2025-01-05 22:48:01,646 - training - INFO - Class 1: 262 samples (21.91%)
+2025-01-05 22:48:01,646 - training - INFO - Class 2: 344 samples (28.76%)
+2025-01-05 22:48:01,647 - training - INFO - Class 3: 368 samples (30.77%)
+2025-01-05 22:48:01,647 - training - INFO - Class 4: 88 samples (7.36%)
+2025-01-05 22:48:01,649 - training - INFO - 
+Class weights after smoothing:
+2025-01-05 22:48:01,649 - training - INFO - Class 0: 1.6281
+2025-01-05 22:48:01,650 - training - INFO - Class 1: 0.9304
+2025-01-05 22:48:01,650 - training - INFO - Class 2: 0.7563
+2025-01-05 22:48:01,650 - training - INFO - Class 3: 0.7200
+2025-01-05 22:48:01,651 - training - INFO - Class 4: 2.3745
+2025-01-05 22:48:02,207 - training - ERROR - Error during training: 'SleepStageClassifier' object has no attribute 'model_params'
+2025-01-05 22:49:35,072 - training - INFO - Starting model training
+2025-01-05 22:49:35,073 - training - INFO - Loading dataset...
+2025-01-05 22:49:54,232 - training - INFO - Dataset loaded: 1196 samples
+2025-01-05 22:49:54,233 - training - INFO - 
+Detailed class distribution:
+2025-01-05 22:49:54,233 - training - INFO - Class 0: 134 samples (11.20%)
+2025-01-05 22:49:54,233 - training - INFO - Class 1: 262 samples (21.91%)
+2025-01-05 22:49:54,233 - training - INFO - Class 2: 344 samples (28.76%)
+2025-01-05 22:49:54,234 - training - INFO - Class 3: 368 samples (30.77%)
+2025-01-05 22:49:54,234 - training - INFO - Class 4: 88 samples (7.36%)
+2025-01-05 22:49:54,235 - training - INFO - 
+Class weights after smoothing:
+2025-01-05 22:49:54,235 - training - INFO - Class 0: 1.6281
+2025-01-05 22:49:54,236 - training - INFO - Class 1: 0.9304
+2025-01-05 22:49:54,236 - training - INFO - Class 2: 0.7563
+2025-01-05 22:49:54,237 - training - INFO - Class 3: 0.7200
+2025-01-05 22:49:54,237 - training - INFO - Class 4: 2.3745
+2025-01-05 22:49:55,090 - training - ERROR - Error during training: 'int' object is not subscriptable
+2025-01-05 22:51:02,864 - training - INFO - Starting model training
+2025-01-05 22:51:02,865 - training - INFO - Loading dataset...
+2025-01-05 22:51:22,287 - training - INFO - Dataset loaded: 1196 samples
+2025-01-05 22:51:22,288 - training - INFO - 
+Detailed class distribution:
+2025-01-05 22:51:22,288 - training - INFO - Class 0: 134 samples (11.20%)
+2025-01-05 22:51:22,289 - training - INFO - Class 1: 262 samples (21.91%)
+2025-01-05 22:51:22,289 - training - INFO - Class 2: 344 samples (28.76%)
+2025-01-05 22:51:22,289 - training - INFO - Class 3: 368 samples (30.77%)
+2025-01-05 22:51:22,290 - training - INFO - Class 4: 88 samples (7.36%)
+2025-01-05 22:51:22,291 - training - INFO - 
+Class weights after smoothing:
+2025-01-05 22:51:22,292 - training - INFO - Class 0: 1.6281
+2025-01-05 22:51:22,292 - training - INFO - Class 1: 0.9304
+2025-01-05 22:51:22,292 - training - INFO - Class 2: 0.7563
+2025-01-05 22:51:22,293 - training - INFO - Class 3: 0.7200
+2025-01-05 22:51:22,293 - training - INFO - Class 4: 2.3745
+2025-01-05 23:14:22,098 - training - INFO - Model saved to models\sleep_classifier.h5
+2025-01-05 23:17:40,379 - training - INFO - Starting model training
+2025-01-05 23:17:40,381 - training - INFO - Loading dataset...
+2025-01-05 23:18:00,824 - training - INFO - Dataset loaded: 1196 samples
+2025-01-05 23:18:00,825 - training - INFO - 
+Detailed class distribution:
+2025-01-05 23:18:00,826 - training - INFO - Class 0: 134 samples (11.20%)
+2025-01-05 23:18:00,826 - training - INFO - Class 1: 262 samples (21.91%)
+2025-01-05 23:18:00,827 - training - INFO - Class 2: 344 samples (28.76%)
+2025-01-05 23:18:00,827 - training - INFO - Class 3: 368 samples (30.77%)
+2025-01-05 23:18:00,827 - training - INFO - Class 4: 88 samples (7.36%)
+2025-01-05 23:18:00,829 - training - INFO - 
+Class weights after smoothing:
+2025-01-05 23:18:00,830 - training - INFO - Class 0: 1.6281
+2025-01-05 23:18:00,830 - training - INFO - Class 1: 0.9304
+2025-01-05 23:18:00,830 - training - INFO - Class 2: 0.7563
+2025-01-05 23:18:00,831 - training - INFO - Class 3: 0.7200
+2025-01-05 23:18:00,831 - training - INFO - Class 4: 2.3745
+2025-01-05 23:26:17,889 - training - INFO - Model saved to models\sleep_classifier.h5
+2025-01-05 23:28:10,036 - training - INFO - Starting model training
+2025-01-05 23:28:10,038 - training - INFO - Loading dataset...
+2025-01-05 23:28:35,363 - training - INFO - Dataset loaded: 1796 samples
+2025-01-05 23:28:35,363 - training - INFO - 
+Detailed class distribution:
+2025-01-05 23:28:35,364 - training - INFO - Class 0: 200 samples (11.14%)
+2025-01-05 23:28:35,364 - training - INFO - Class 1: 390 samples (21.71%)
+2025-01-05 23:28:35,364 - training - INFO - Class 2: 494 samples (27.51%)
+2025-01-05 23:28:35,365 - training - INFO - Class 3: 566 samples (31.51%)
+2025-01-05 23:28:35,365 - training - INFO - Class 4: 146 samples (8.13%)
+2025-01-05 23:28:35,367 - training - INFO - 
+Class weights after smoothing:
+2025-01-05 23:28:35,368 - training - INFO - Class 0: 1.6368
+2025-01-05 23:28:35,368 - training - INFO - Class 1: 0.9368
+2025-01-05 23:28:35,369 - training - INFO - Class 2: 0.7817
+2025-01-05 23:28:35,369 - training - INFO - Class 3: 0.7077
+2025-01-05 23:28:35,369 - training - INFO - Class 4: 2.1682
+2025-01-05 23:28:36,333 - training - ERROR - Error during training: name 'Model' is not defined
+2025-01-05 23:29:27,116 - training - INFO - Starting model training
+2025-01-05 23:29:27,117 - training - INFO - Loading dataset...
+2025-01-05 23:29:51,523 - training - INFO - Dataset loaded: 1796 samples
+2025-01-05 23:29:51,524 - training - INFO - 
+Detailed class distribution:
+2025-01-05 23:29:51,524 - training - INFO - Class 0: 200 samples (11.14%)
+2025-01-05 23:29:51,524 - training - INFO - Class 1: 390 samples (21.71%)
+2025-01-05 23:29:51,525 - training - INFO - Class 2: 494 samples (27.51%)
+2025-01-05 23:29:51,525 - training - INFO - Class 3: 566 samples (31.51%)
+2025-01-05 23:29:51,525 - training - INFO - Class 4: 146 samples (8.13%)
+2025-01-05 23:29:51,527 - training - INFO - 
+Class weights after smoothing:
+2025-01-05 23:29:51,528 - training - INFO - Class 0: 1.6368
+2025-01-05 23:29:51,528 - training - INFO - Class 1: 0.9368
+2025-01-05 23:29:51,528 - training - INFO - Class 2: 0.7817
+2025-01-05 23:29:51,529 - training - INFO - Class 3: 0.7077
+2025-01-05 23:29:51,529 - training - INFO - Class 4: 2.1682
+2025-01-06 00:20:26,255 - training - INFO - Model saved to models\sleep_classifier.h5
+2025-01-06 00:24:29,818 - training - INFO - Starting model training
+2025-01-06 00:24:29,819 - training - INFO - Loading dataset...
+2025-01-06 00:25:11,146 - training - ERROR - Error during training: Graph execution error:
+
+Detected at node GatherV2 defined at (most recent call last):
+<stack traces unavailable>
+indices[0] = 349 is not in [0, 5)
+	 [[{{node GatherV2}}]]
+	 [[IteratorGetNext]] [Op:__inference_train_function_16259]
+2025-01-06 00:26:41,449 - training - INFO - Starting model training
+2025-01-06 00:26:41,450 - training - INFO - Loading dataset...
+2025-01-06 00:27:08,183 - training - ERROR - Error during training: Graph execution error:
+
+Detected at node GatherV2 defined at (most recent call last):
+<stack traces unavailable>
+indices[0] = 110 is not in [0, 5)
+	 [[{{node GatherV2}}]]
+	 [[IteratorGetNext]] [Op:__inference_train_function_16259]
+2025-01-06 00:28:11,489 - training - INFO - Starting model training
+2025-01-06 00:28:11,490 - training - INFO - Loading dataset...
+2025-01-06 00:28:38,249 - training - ERROR - Error during training: Graph execution error:
+
+Detected at node GatherV2 defined at (most recent call last):
+<stack traces unavailable>
+indices[0] = 374 is not in [0, 5)
+	 [[{{node GatherV2}}]]
+	 [[IteratorGetNext]] [Op:__inference_train_function_16259]
+2025-01-06 00:29:15,406 - training - INFO - Starting model training
+2025-01-06 00:29:15,406 - training - INFO - Loading dataset...
+2025-01-06 00:29:44,906 - training - ERROR - Error during training: Graph execution error:
+
+Detected at node GatherV2 defined at (most recent call last):
+<stack traces unavailable>
+indices[0] = 36 is not in [0, 5)
+	 [[{{node GatherV2}}]]
+	 [[IteratorGetNext]] [Op:__inference_train_function_16259]
+2025-01-06 00:30:06,303 - training - INFO - Starting model training
+2025-01-06 00:30:06,303 - training - INFO - Loading dataset...
+2025-01-06 00:38:15,430 - training - INFO - Starting model training
+2025-01-06 00:38:15,430 - training - INFO - Loading dataset...
+2025-01-06 00:49:39,578 - training - INFO - Starting model training
+2025-01-06 00:49:39,578 - training - INFO - Loading dataset...
+2025-01-06 00:49:51,050 - training - ERROR - Error during training: SleepStageClassifier.__init__() got an unexpected keyword argument 'config'
+2025-01-06 00:56:06,879 - training - INFO - Starting model training
+2025-01-06 00:56:06,880 - training - INFO - Loading dataset...
+2025-01-06 00:56:17,944 - training - ERROR - Error during training: SleepStageClassifier.__init__() got an unexpected keyword argument 'config'
+2025-01-06 01:39:07,777 - training - INFO - Starting model training
+2025-01-06 01:39:07,778 - training - INFO - Loading dataset...
+2025-01-06 01:39:18,142 - training - ERROR - Error during training: No valid data loaded
+2025-01-06 01:42:24,214 - training - INFO - Starting model training
+2025-01-06 01:42:24,215 - training - INFO - Loading dataset...
+2025-01-06 01:42:35,681 - training - ERROR - Error during training: No valid data loaded
+2025-01-06 01:47:19,480 - training - INFO - Starting model training
+2025-01-06 01:47:19,483 - training - INFO - Loading dataset...
+2025-01-06 01:47:34,222 - training - ERROR - Error during training: No valid data loaded. Check that PSG files have matching hypnograms.
+2025-01-06 01:49:08,003 - training - INFO - Starting model training
+2025-01-06 01:49:08,005 - training - INFO - Loading dataset...
+2025-01-06 01:49:30,627 - training - ERROR - Error during training: setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (1196,) + inhomogeneous part.
+2025-01-06 01:50:43,628 - training - INFO - Starting model training
+2025-01-06 01:50:43,629 - training - INFO - Loading dataset...
+2025-01-06 01:51:03,686 - training - ERROR - Error during training: setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (1196,) + inhomogeneous part.
+2025-01-06 01:52:15,710 - training - INFO - Starting model training
+2025-01-06 01:52:15,711 - training - INFO - Loading dataset...
+2025-01-06 01:52:36,292 - training - ERROR - Error during training: Inconsistent segment shapes found: {'(3115, 7)', '(3048, 7)', '(3243, 7)', '(3081, 7)', '(3230, 7)', '(2972, 7)', '(3017, 7)', '(3285, 7)', '(3256, 7)', '(2825, 7)', '(2930, 7)', '(3075, 7)', '(2823, 7)', '(2767, 7)', '(3074, 7)', '(2911, 7)', '(3206, 7)', '(3116, 7)', '(2833, 7)', '(3004, 7)', '(3145, 7)', '(3073, 7)', '(2806, 7)', '(3288, 7)', '(3232, 7)', '(3093, 7)', '(2816, 7)', '(2901, 7)', '(3111, 7)', '(3267, 7)', '(2764, 7)', '(2776, 7)', '(3156, 7)', '(3219, 7)', '(3047, 7)', '(2808, 7)', '(2762, 7)', '(2800, 7)', '(3211, 7)', '(3059, 7)', '(3203, 7)', '(3213, 7)', '(3188, 7)', '(3189, 7)', '(2894, 7)', '(2810, 7)', '(3024, 7)', '(3016, 7)', '(2745, 7)', '(2824, 7)', '(3040, 7)', '(3290, 7)', '(2837, 7)', '(3247, 7)', '(2875, 7)', '(2722, 7)', '(3223, 7)', '(2995, 7)', '(3091, 7)', '(2798, 7)', '(3118, 7)', '(3054, 7)', '(2967, 7)', '(2821, 7)', '(2814, 7)', '(3018, 7)', '(3124, 7)', '(2998, 7)', '(2883, 7)', '(2703, 7)', '(3214, 7)', '(2818, 7)', '(3263, 7)', '(3237, 7)', '(2858, 7)', '(3159, 7)', '(2984, 7)', '(3120, 7)', '(2738, 7)', '(3225, 7)', '(3221, 7)', '(2839, 7)', '(3198, 7)', '(2983, 7)', '(2993, 7)', '(2763, 7)', '(2938, 7)', '(2728, 7)', '(3153, 7)', '(3076, 7)', '(3224, 7)', '(2889, 7)', '(3262, 7)', '(2923, 7)', '(3281, 7)', '(3217, 7)', '(2835, 7)', '(3178, 7)', '(2991, 7)', '(2941, 7)', '(2747, 7)', '(3163, 7)', '(3148, 7)', '(3035, 7)', '(2784, 7)', '(2838, 7)', '(2727, 7)', '(2986, 7)', '(3008, 7)', '(3068, 7)', '(2795, 7)', '(2987, 7)', '(3060, 7)', '(2872, 7)', '(3265, 7)', '(2796, 7)', '(2765, 7)', '(2914, 7)', '(3251, 7)', '(3291, 7)', '(2934, 7)', '(2712, 7)', '(3006, 7)', '(2753, 7)', '(2867, 7)', '(2940, 7)', '(2956, 7)', '(2719, 7)', '(3063, 7)', '(2846, 7)', '(2937, 7)', '(2820, 7)', '(2974, 7)', '(2701, 7)', '(2769, 7)', '(2854, 7)', '(2781, 7)', '(2848, 7)', '(3001, 7)', '(2756, 7)', '(2917, 7)', '(2733, 7)', '(2943, 7)', '(3114, 7)', '(3000, 7)', '(3033, 7)', '(2752, 7)', '(3105, 7)', '(3131, 7)', '(3136, 7)', '(3268, 7)'}
+2025-01-06 01:57:02,507 - training - INFO - Starting model training
+2025-01-06 01:57:02,508 - training - INFO - Loading dataset...
+2025-01-06 01:57:22,742 - training - INFO - Dataset loaded: 1196 samples
+2025-01-06 01:57:24,472 - training - ERROR - Error during training: Failed to find data adapter that can handle input: <class 'ellipsis'>, <class 'NoneType'>
+2025-01-06 01:59:26,515 - training - INFO - Starting model training
+2025-01-06 01:59:26,516 - training - INFO - Loading dataset...
+2025-01-06 01:59:46,372 - training - INFO - Dataset loaded: 1196 samples
+2025-01-06 01:59:46,374 - training - INFO - 
+Detailed class distribution:
+2025-01-06 01:59:46,374 - training - INFO - Class 0: 134 samples (11.20%)
+2025-01-06 01:59:46,375 - training - INFO - Class 1: 262 samples (21.91%)
+2025-01-06 01:59:46,375 - training - INFO - Class 2: 344 samples (28.76%)
+2025-01-06 01:59:46,375 - training - INFO - Class 3: 368 samples (30.77%)
+2025-01-06 01:59:46,376 - training - INFO - Class 4: 88 samples (7.36%)
+2025-01-06 01:59:46,377 - training - INFO - 
+Class weights after smoothing:
+2025-01-06 01:59:46,377 - training - INFO - Class 0: 1.7851
+2025-01-06 01:59:46,377 - training - INFO - Class 1: 0.9130
+2025-01-06 01:59:46,378 - training - INFO - Class 2: 0.6953
+2025-01-06 01:59:46,378 - training - INFO - Class 3: 0.6500
+2025-01-06 01:59:46,378 - training - INFO - Class 4: 2.7182
+2025-01-06 01:59:46,379 - training - ERROR - Error during training: 'input_shape'
+2025-01-06 02:00:53,626 - training - INFO - Starting model training
+2025-01-06 02:00:53,627 - training - INFO - Loading dataset...
+2025-01-06 02:01:14,313 - training - INFO - Dataset loaded: 1196 samples
+2025-01-06 02:01:14,315 - training - INFO - 
+Detailed class distribution:
+2025-01-06 02:01:14,315 - training - INFO - Class 0: 134 samples (11.20%)
+2025-01-06 02:01:14,315 - training - INFO - Class 1: 262 samples (21.91%)
+2025-01-06 02:01:14,316 - training - INFO - Class 2: 344 samples (28.76%)
+2025-01-06 02:01:14,316 - training - INFO - Class 3: 368 samples (30.77%)
+2025-01-06 02:01:14,316 - training - INFO - Class 4: 88 samples (7.36%)
+2025-01-06 02:01:14,316 - training - INFO - 
+Class weights after smoothing:
+2025-01-06 02:01:14,317 - training - INFO - Class 0: 1.7851
+2025-01-06 02:01:14,317 - training - INFO - Class 1: 0.9130
+2025-01-06 02:01:14,317 - training - INFO - Class 2: 0.6953
+2025-01-06 02:01:14,317 - training - INFO - Class 3: 0.6500
+2025-01-06 02:01:14,318 - training - INFO - Class 4: 2.7182
+2025-01-06 02:01:16,131 - training - ERROR - Error during training: Failed to convert a NumPy array to a Tensor (Unsupported object type numpy.ndarray).
+2025-01-06 02:02:24,852 - training - INFO - Starting model training
+2025-01-06 02:02:24,853 - training - INFO - Loading dataset...
+2025-01-06 02:02:45,307 - training - INFO - Dataset loaded: 1196 samples
+2025-01-06 02:02:45,308 - training - INFO - 
+Detailed class distribution:
+2025-01-06 02:02:45,309 - training - INFO - Class 0: 134 samples (11.20%)
+2025-01-06 02:02:45,309 - training - INFO - Class 1: 262 samples (21.91%)
+2025-01-06 02:02:45,310 - training - INFO - Class 2: 344 samples (28.76%)
+2025-01-06 02:02:45,310 - training - INFO - Class 3: 368 samples (30.77%)
+2025-01-06 02:02:45,311 - training - INFO - Class 4: 88 samples (7.36%)
+2025-01-06 02:02:45,311 - training - INFO - 
+Class weights after smoothing:
+2025-01-06 02:02:45,312 - training - INFO - Class 0: 1.7851
+2025-01-06 02:02:45,312 - training - INFO - Class 1: 0.9130
+2025-01-06 02:02:45,312 - training - INFO - Class 2: 0.6953
+2025-01-06 02:02:45,313 - training - INFO - Class 3: 0.6500
+2025-01-06 02:02:45,313 - training - INFO - Class 4: 2.7182
+2025-01-06 03:45:55,989 - training - INFO - Contents of data\raw:
+2025-01-06 03:45:55,990 - training - INFO -   - SC4001E0-PSG.edf
+2025-01-06 03:45:55,990 - training - INFO -   - SC4001EC-Hypnogram.edf
+2025-01-06 03:45:55,990 - training - INFO -   - SC4002E0-PSG.edf
+2025-01-06 03:45:55,990 - training - INFO -   - SC4002EC-Hypnogram.edf
+2025-01-06 03:45:55,990 - training - INFO -   - SC4011E0-PSG.edf
+2025-01-06 03:45:55,991 - training - INFO -   - SC4011EH-Hypnogram.edf
+2025-01-06 03:45:55,991 - training - INFO -   - SC4012E0-PSG.edf
+2025-01-06 03:45:55,992 - training - INFO -   - SC4012EC-Hypnogram.edf
+2025-01-06 03:45:55,993 - training - INFO - Loading dataset...
+2025-01-06 03:45:55,993 - training - ERROR - Unexpected error: name 'SleepDataset' is not defined
+2025-01-06 03:47:28,273 - training - INFO - Contents of data\raw:
+2025-01-06 03:47:28,273 - training - INFO -   - SC4001E0-PSG.edf
+2025-01-06 03:47:28,273 - training - INFO -   - SC4001EC-Hypnogram.edf
+2025-01-06 03:47:28,274 - training - INFO -   - SC4002E0-PSG.edf
+2025-01-06 03:47:28,274 - training - INFO -   - SC4002EC-Hypnogram.edf
+2025-01-06 03:47:28,274 - training - INFO -   - SC4011E0-PSG.edf
+2025-01-06 03:47:28,274 - training - INFO -   - SC4011EH-Hypnogram.edf
+2025-01-06 03:47:28,275 - training - INFO -   - SC4012E0-PSG.edf
+2025-01-06 03:47:28,275 - training - INFO -   - SC4012EC-Hypnogram.edf
+2025-01-06 03:47:28,276 - training - INFO - Loading dataset...
+2025-01-06 03:47:28,276 - training - ERROR - Unexpected error: Dataset.__init__() got an unexpected keyword argument 'use_augmentation'

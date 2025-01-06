@@ -1,7 +1,7 @@
 model:
   input_shape: [3000, 7]  # 30 seconds @ 100Hz, 7 channels
   batch_size: 32
-  epochs: 100
+  epochs: 50
   learning_rate: 0.001
 
 preprocessing:

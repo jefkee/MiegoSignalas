@@ -1,89 +1,111 @@
 import os
-import logging
 import numpy as np
+from src.models.dataset import SleepDataset
+from src.models.trainer import ModelTrainer
+from src.utils.logger import Logger
 from sklearn.utils.class_weight import compute_class_weight
-from src.models.dataset import Dataset
-from src.models.classifier import SleepClassifier
-from src.config.settings import MODEL_PARAMS, TRAINING_PARAMS
-import gc
-import sys
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('training')
+from src.models.classifier import SleepStageClassifier
+import tensorflow as tf
 
 def main():
+    # Initialize logger
+    logger = Logger('training')
+    logger.info('Starting model training')
+    
     try:
-        # Initialize dataset
+        # Set paths
         data_dir = os.path.join('data', 'raw')
-        dataset = Dataset(data_dir)
+        model_dir = os.path.join('models')
+        vis_dir = os.path.join(model_dir, 'visualizations')
         
-        # Load and preprocess data in smaller batches
-        logger.info("Loading dataset...")
-        try:
-            X, y = dataset.load_training_data(batch_size=3)  # Process 3 files at a time
-        except KeyboardInterrupt:
-            logger.info("\nData loading interrupted by user")
-            sys.exit(0)
-        except Exception as e:
-            logger.error(f"Error loading data: {str(e)}")
-            sys.exit(1)
+        # Create directories
+        os.makedirs(model_dir, exist_ok=True)
+        for subdir in ['curves', 'confusion', 'roc', 'models']:
+            os.makedirs(os.path.join(vis_dir, subdir), exist_ok=True)
         
-        if len(X) == 0:
-            logger.error("No valid data loaded")
-            return
-            
-        # Free up memory
-        gc.collect()
+        # Load and prepare dataset
+        logger.info('Loading dataset...')
+        dataset = SleepDataset(data_dir, use_augmentation=True)
+        X, y = dataset.load_training_data()
+        logger.info(f'Dataset loaded: {len(X)} samples')
         
-        # Print dataset statistics
-        logger.info(f"\nDataset loaded successfully:")
-        logger.info(f"Total samples: {len(X)}")
-        logger.info(f"Input shape: {X.shape}")
-        logger.info(f"Label distribution: {np.bincount(y)}")
+        # Normalize data to [-1, 1]
+        X = (X - np.mean(X, axis=0)) / (np.std(X, axis=0) + 1e-8)
         
-        # Compute class weights
+        # Calculate class weights
         unique_classes = np.unique(y)
-        class_weights = compute_class_weight('balanced', classes=unique_classes, y=y)
-        class_weight_dict = dict(zip(unique_classes, class_weights))
+        class_weights = compute_class_weight(
+            class_weight='balanced',
+            classes=unique_classes,
+            y=y
+        )
+        class_weight_dict = {i: weight for i, weight in enumerate(class_weights)}
         
-        # Initialize model
-        logger.info("\nInitializing model...")
-        model = SleepClassifier(MODEL_PARAMS)
+        logger.info("\nClass weights:")
+        for i, weight in class_weight_dict.items():
+            logger.info(f"Class {i}: {weight:.4f}")
         
-        try:
-            # Train model with memory-efficient batch processing
-            logger.info("Starting model training")
-            history = model.model.fit(
-                X, y,
-                batch_size=TRAINING_PARAMS['batch_size'],
-                epochs=TRAINING_PARAMS['epochs'],
-                validation_split=TRAINING_PARAMS['validation_split'],
-                class_weight=class_weight_dict,
-                verbose=1
-            )
-            
-            # Save model
-            logger.info("Saving model...")
-            model_dir = os.path.join('models')
-            os.makedirs(model_dir, exist_ok=True)
-            model.model.save(os.path.join(model_dir, 'sleep_classifier.h5'))
-            logger.info("Model saved successfully")
-            
-        except KeyboardInterrupt:
-            logger.info("\nTraining interrupted by user")
-        except Exception as e:
-            logger.error(f"Error during training: {str(e)}")
-            raise
-            
-    except KeyboardInterrupt:
-        logger.info("\nProcess interrupted by user")
+        # Configure training
+        config = {
+            'input_shape': [3000, 7],  # 30 seconds at 100Hz, 7 channels
+            'batch_size': 32,
+            'epochs': 50,
+            'class_weights': class_weight_dict,
+            'validation_split': 0.2,
+            'shuffle': True,
+            'callbacks': [
+                # Early stopping
+                tf.keras.callbacks.EarlyStopping(
+                    monitor='val_loss',
+                    patience=10,
+                    restore_best_weights=True,
+                    mode='min'
+                ),
+                # Learning rate scheduler
+                tf.keras.callbacks.ReduceLROnPlateau(
+                    monitor='val_loss',
+                    factor=0.5,
+                    patience=5,
+                    min_lr=0.00001
+                ),
+                # Model checkpoint
+                tf.keras.callbacks.ModelCheckpoint(
+                    filepath=os.path.join(model_dir, 'best_model.h5'),
+                    monitor='val_accuracy',
+                    save_best_only=True,
+                    mode='max'
+                ),
+                # TensorBoard logging
+                tf.keras.callbacks.TensorBoard(
+                    log_dir=os.path.join(vis_dir, 'tensorboard'),
+                    histogram_freq=1
+                )
+            ]
+        }
+        
+        # Initialize trainer
+        trainer = ModelTrainer(config)
+        
+        # Train with cross-validation
+        logger.info("Starting cross-validation training...")
+        fold_scores = trainer.train_with_cross_validation(X, y, n_folds=5)
+        
+        # Log results
+        logger.info("\nCross-validation results:")
+        for fold, score in enumerate(fold_scores, 1):
+            logger.info(f"Fold {fold}: {score:.4f}")
+        logger.info(f"Mean accuracy: {np.mean(fold_scores):.4f} ± {np.std(fold_scores):.4f}")
+        
+        # Save final model
+        model_path = os.path.join(model_dir, 'sleep_classifier.h5')
+        trainer.save_model(model_path)
+        logger.info(f'Model saved to {model_path}')
+        
+        return fold_scores
+        
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
+        logger.error(f'Error during training: {str(e)}')
         raise
-    finally:
-        # Clean up memory
-        gc.collect()
 
 if __name__ == '__main__':
     main() 

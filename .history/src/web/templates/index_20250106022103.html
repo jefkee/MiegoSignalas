@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MiegoSignalas</title>
+    <style>
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .section { margin-bottom: 30px; }
+        .visualization { margin: 10px; padding: 10px; border: 1px solid #ddd; }
+        img { max-width: 100%; height: auto; }
+        .tabs { display: flex; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; cursor: pointer; border: 1px solid #ddd; }
+        .tab.active { background: #eee; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        #loading { display: none; text-align: center; padding: 20px; }
+        .error { color: red; }
+        .success { color: green; }
+        .sleep-stages img { display: block; margin: 20px 0; }
+        .quality-score { font-size: 1.2em; margin: 20px 0; }
+        .file-instructions {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .file-instructions p {
+            margin: 5px 0;
+            color: #666;
+        }
+        #edf-file {
+            margin: 10px 0;
+        }
+        .error-message {
+            color: #dc3545;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #dc3545;
+            border-radius: 4px;
+            display: none;
+        }
+        .file-instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .file-instructions h3 {
+            margin-top: 0;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .file-requirement {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .file-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            color: #007bff;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            margin: 0;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .file-desc {
+            margin: 5px 0 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .upload-container {
+            margin: 20px 0;
+        }
+
+        .validation-message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .validation-message.error {
+            display: block;
+            background: #fff3f3;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+
+        .validation-message.success {
+            display: block;
+            background: #f3fff3;
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+
+        .error-message {
+            background-color: #fff3f3;
+            color: #dc3545;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #dc3545;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .error-message.visible {
+            display: block !important;
+        }
+
+        #loading {
+            background-color: #e9ecef;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .file-upload {
+            margin-bottom: 15px;
+        }
+        
+        .file-upload label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .upload-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .progress-indicator {
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .progress-text {
+            margin-top: 10px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .chart-explanation {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .chart-explanation p {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .chart-explanation ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .chart-explanation li {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .chart-explanation strong {
+            color: #333;
+        }
+
+        .stage-distribution {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        
+        .stage-percentages {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .stage-percentages p {
+            margin: 0;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Miego analizė</h1>
+        
+        <div class="upload-section">
+            <h2>Upload Sleep Recording</h2>
+            <div class="file-instructions">
+                <h3>Required Files:</h3>
+                <div class="file-requirement">
+                    <span class="file-icon">📊</span>
+                    <div class="file-info">
+                        <p class="file-name">PSG File (required)</p>
+                        <p class="file-desc">Name must end with '-PSG.edf' (Sleep recording)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <form id="upload-form" enctype="multipart/form-data">
+                <div class="upload-container">
+                    <div class="file-upload">
+                        <label>PSG File:</label>
+                        <input type="file" id="psg_file" accept=".edf" required>
+                        <div id="psg-validation" class="validation-message"></div>
+                    </div>
+                    <button type="submit">Analyze</button>
+                </div>
+            </form>
+            
+            <div id="error-container" class="error-message" style="display: none;"></div>
+        </div>
+
+        <div id="loading" style="display: none;">
+            <div class="progress-indicator">
+                <div class="spinner"></div>
+                <p class="progress-text">Analyzing sleep recording...</p>
+            </div>
+        </div>
+
+        <div id="analysis-results" style="display: none;">
+            <h2>Analysis Results</h2>
+            
+            <div class="quality-score">
+                <h3>Sleep Quality</h3>
+                <div id="quality-value"></div>
+                <div id="quality-interpretation"></div>
+            </div>
+
+            <div class="sleep-stages">
+                <div class="chart-explanation">
+                    <p>This chart shows how your sleep time was distributed across different stages:</p>
+                    <ul>
+                        <li><strong>Wake:</strong> Time spent awake during recording</li>
+                        <li><strong>Light Sleep (N1):</strong> Transition between wake and deeper sleep</li>
+                        <li><strong>Intermediate Sleep (N2):</strong> Makes up most of your sleep</li>
+                        <li><strong>Deep Sleep (N3):</strong> Most restorative stage</li>
+                        <li><strong>REM:</strong> Dream sleep, important for memory and learning</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="recommendations">
+                <h3>Recommendations</h3>
+                <ul id="recommendations-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html> 
