@@ -4,6 +4,27 @@ from keras.models import Sequential
 from keras.layers import (Dense, Dropout, Conv1D, MaxPooling1D, LSTM,
                          BatchNormalization, Bidirectional, GlobalAveragePooling1D,
                          Flatten, Activation)
+
+class ResizeSequence(tf.keras.layers.Layer):
+    def __init__(self, target_len, **kwargs):
+        super().__init__(**kwargs)
+        self.target_len = target_len
+
+    def call(self, inputs):
+        return tf.image.resize(
+            tf.expand_dims(inputs, 2),
+            (self.target_len, 1),
+            method='bilinear'
+        )[:, :, 0, :]
+
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0], self.target_len, input_shape[2])
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"target_len": self.target_len})
+        return config
+
 class SleepStageClassifier:
     """
     Neural network for sleep stage classification
@@ -16,40 +37,47 @@ class SleepStageClassifier:
         # Input layer
         inputs = tf.keras.Input(shape=input_shape)
         x = BatchNormalization()(inputs)
+        print("After input:", x.shape)
         
-        # First CNN block - extract low-level features
-        # Input: (batch, 3000, 7) -> Output: (batch, 750, 32)
-        x1 = Conv1D(32, kernel_size=64, strides=2, activation='relu', padding='same')(x)
+        # First CNN block
+        x1 = Conv1D(64, kernel_size=64, strides=2, activation='relu', padding='same')(x)
+        print("After first conv:", x1.shape)
         x1 = BatchNormalization()(x1)
         x1 = MaxPooling1D(pool_size=2)(x1)
-        x1 = Dropout(0.3)(x1)
+        print("After first pool (x1):", x1.shape)
+        x1_skip = Dropout(0.3)(x1)
+        print("After dropout (x1_skip):", x1_skip.shape)
         
-        # Second CNN block - extract mid-level features
-        # Input: (batch, 750, 32) -> Output: (batch, 94, 64)
-        x2 = Conv1D(64, kernel_size=32, strides=2, activation='relu', padding='same')(x1)
+        # Second CNN block
+        x2 = Conv1D(128, kernel_size=32, strides=2, activation='relu', padding='same')(x1_skip)
+        print("After second conv:", x2.shape)
         x2 = BatchNormalization()(x2)
-        x2 = MaxPooling1D(pool_size=4)(x2)
+        x2 = MaxPooling1D(pool_size=2)(x2)
+        print("After second pool:", x2.shape)
         x2 = Dropout(0.3)(x2)
         
         # Third CNN block
-        # Input: (batch, 94, 64) -> Output: (batch, 23, 128)
-        x3 = Conv1D(128, kernel_size=16, strides=2, activation='relu', padding='same')(x2)
+        x3 = Conv1D(256, kernel_size=16, strides=2, activation='relu', padding='same')(x2)
+        print("After third conv:", x3.shape)
         x3 = BatchNormalization()(x3)
         x3 = MaxPooling1D(pool_size=2)(x3)
+        print("After third pool (x3 final):", x3.shape)
         
-        # Residual connection from first block to match x3 shape
-        # Input: (batch, 750, 32) -> Output: (batch, 23, 128)
-        x_res = Conv1D(128, kernel_size=1)(x1)  # Change channels: 32 -> 128
-        x_res = MaxPooling1D(pool_size=32)(x_res)  # Match temporal dimension: 750 -> 23
-        x_res = BatchNormalization()(x_res)
+        # Skip connection with exact size matching
+        x_skip = Conv1D(256, kernel_size=1)(x1_skip)
+        print("After skip conv:", x_skip.shape)
         
-        # Add residual connection (both tensors should be shape (batch, 23, 128))
-        x = tf.keras.layers.Add()([x3, x_res])
+        # Use custom layer to resize x_skip to match x3's length
+        x_skip = ResizeSequence(47)(x_skip)
+        print("After skip resize (x_skip final):", x_skip.shape)
+        
+        # Add skip connection
+        x = tf.keras.layers.Add()([x3, x_skip])
         x = Activation('relu')(x)
         x = Dropout(0.3)(x)
         
-        # Bidirectional LSTM
-        x = Bidirectional(LSTM(64, 
+        # Bidirectional LSTM with increased units
+        x = Bidirectional(LSTM(128, 
                              return_sequences=True,
                              kernel_regularizer=tf.keras.regularizers.l2(0.001),
                              recurrent_regularizer=tf.keras.regularizers.l2(0.001)))(x)
@@ -57,15 +85,20 @@ class SleepStageClassifier:
         x = Dropout(0.3)(x)
         
         # Attention mechanism
-        attention = Dense(128, activation='tanh')(x)  # Changed from 1 to match feature dimension
+        attention = Dense(256, activation='tanh')(x)
         attention = tf.keras.layers.Softmax(axis=1)(attention)
         x = tf.keras.layers.Multiply()([x, attention])
         
-        # Global pooling to reduce sequence dimension
+        # Global pooling
         x = GlobalAveragePooling1D()(x)
         
-        # Dense layers
-        x = Dense(64, activation='relu',
+        # Dense layers with increased capacity
+        x = Dense(256, activation='relu',
+                 kernel_regularizer=tf.keras.regularizers.l2(0.001))(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.3)(x)
+        
+        x = Dense(128, activation='relu',
                  kernel_regularizer=tf.keras.regularizers.l2(0.001))(x)
         x = BatchNormalization()(x)
         x = Dropout(0.3)(x)
@@ -147,9 +180,10 @@ class SleepStageClassifier:
             
             return tf.reduce_mean(loss)
         
-        # Create custom objects dictionary
+        # Create custom objects dictionary with both loss function and ResizeSequence layer
         custom_objects = {
-            'loss_fn': loss_fn
+            'loss_fn': loss_fn,
+            'ResizeSequence': ResizeSequence
         }
         
         # Load the model with custom objects
@@ -174,7 +208,14 @@ class SleepStageClassifier:
             if len(features.shape) != 3:
                 raise ValueError(f"Expected 3D input array (batch, time, channels), got shape {features.shape}")
             
-            predictions = self.model.predict(features)
+            # Use larger batch size and enable parallel processing
+            predictions = self.model.predict(
+                features,
+                batch_size=128,  # Increased from default
+                verbose=1,
+                workers=4,       # Enable parallel processing
+                use_multiprocessing=True
+            )
             print(f"Predictions shape: {predictions.shape}")
             
             return predictions

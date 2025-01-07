@@ -25,12 +25,15 @@ class SleepAnalyzer:
             # Initialize new model with default parameters
             self.model = SleepStageClassifier()
         
-        # Define required EEG channels for analysis
+        # Define required channels for analysis
         self.required_channels = [
             'EEG Fpz-Cz',      # Frontal EEG channel
             'EEG Pz-Oz',       # Occipital EEG channel
             'EOG horizontal',   # Eye movement channel
+            'Resp oro-nasal',   # Breathing signal
             'EMG submental',    # Chin muscle activity
+            'Temp rectal',      # Body temperature
+            'Event marker'      # Event markers
         ]
         
         # Add configuration parameters
@@ -100,14 +103,37 @@ class SleepAnalyzer:
                 return self.default_response
             
             # Analyze segments with post-processing
-            predictions = self.analyze(segments)
+            predictions = self.analyze(segments, data)
+            print("Raw model predictions distribution:")
+            raw_stages = np.argmax(predictions, axis=1)
+            stage_counts = np.bincount(raw_stages, minlength=5)
+            print(f"Wake: {stage_counts[0]/len(raw_stages)*100:.1f}%")
+            print(f"N1: {stage_counts[1]/len(raw_stages)*100:.1f}%")
+            print(f"N2: {stage_counts[2]/len(raw_stages)*100:.1f}%")
+            print(f"N3: {stage_counts[3]/len(raw_stages)*100:.1f}%")
+            print(f"REM: {stage_counts[4]/len(raw_stages)*100:.1f}%")
+            
             stages = np.argmax(predictions, axis=1)
             
             # Apply temporal smoothing to predictions
             stages = self._smooth_predictions(stages)
+            print("\nAfter smoothing:")
+            smooth_counts = np.bincount(stages, minlength=5)
+            print(f"Wake: {smooth_counts[0]/len(stages)*100:.1f}%")
+            print(f"N1: {smooth_counts[1]/len(stages)*100:.1f}%")
+            print(f"N2: {smooth_counts[2]/len(stages)*100:.1f}%")
+            print(f"N3: {smooth_counts[3]/len(stages)*100:.1f}%")
+            print(f"REM: {smooth_counts[4]/len(stages)*100:.1f}%")
             
             # Apply sleep stage transition rules
             stages = self._apply_transition_rules(stages)
+            print("\nAfter transition rules:")
+            final_counts = np.bincount(stages, minlength=5)
+            print(f"Wake: {final_counts[0]/len(stages)*100:.1f}%")
+            print(f"N1: {final_counts[1]/len(stages)*100:.1f}%")
+            print(f"N2: {final_counts[2]/len(stages)*100:.1f}%")
+            print(f"N3: {final_counts[3]/len(stages)*100:.1f}%")
+            print(f"REM: {final_counts[4]/len(stages)*100:.1f}%")
             
             # Calculate confidence scores
             confidences = np.max(predictions, axis=1)
@@ -182,30 +208,48 @@ class SleepAnalyzer:
                         method='fir',
                         fir_design='firwin'
                     )
-                else:  # EMG channels
-                    # EMG: Keep 10-40 Hz
+                elif 'EMG' in channel:  # EMG channels
+                    # EMG: Keep 5-45 Hz for better muscle atonia detection
                     filtered = mne.filter.filter_data(
                         data[i],
                         sfreq=100,
-                        l_freq=10,
-                        h_freq=40,
+                        l_freq=5,  # Lower cutoff to capture more low-frequency components
+                        h_freq=45,  # Higher cutoff to include more muscle activity
                         method='fir',
                         fir_design='firwin'
                     )
+                elif 'Resp' in channel:  # Respiratory signal
+                    # Resp: Keep 0.1-15 Hz
+                    filtered = mne.filter.filter_data(
+                        data[i],
+                        sfreq=100,
+                        l_freq=0.1,
+                        h_freq=15,
+                        method='fir',
+                        fir_design='firwin'
+                    )
+                elif 'Temp' in channel:  # Temperature signal
+                    # Temperature: Keep very low frequency components
+                    filtered = mne.filter.filter_data(
+                        data[i],
+                        sfreq=100,
+                        l_freq=0.01,
+                        h_freq=1,
+                        method='fir',
+                        fir_design='firwin'
+                    )
+                else:  # Event marker or other channels
+                    # No filtering for event markers
+                    filtered = data[i]
+                
                 filtered_data.append(filtered)
             
             filtered_data = np.array(filtered_data)
             
-            # Pad with zeros to match expected 7 channels
-            n_missing_channels = 7 - len(filtered_data)
-            if n_missing_channels > 0:
-                zero_channels = np.zeros((n_missing_channels, filtered_data.shape[1]))
-                filtered_data = np.vstack([filtered_data, zero_channels])
-            
-            # Robust normalization for each channel
+            # Robust normalization for each channel (except event marker)
             normalized_data = np.zeros_like(filtered_data)
             for i in range(filtered_data.shape[0]):
-                if i < len(self.required_channels):  # Only normalize real channels
+                if 'Event marker' not in self.required_channels[i]:  # Don't normalize event markers
                     # Calculate robust statistics
                     q1, q3 = np.percentile(filtered_data[i], [25, 75])
                     iqr = q3 - q1
@@ -219,6 +263,8 @@ class SleepAnalyzer:
                     median = np.median(clipped)
                     mad = np.median(np.abs(clipped - median))
                     normalized_data[i] = (clipped - median) / (mad * 1.4826)  # 1.4826 makes MAD consistent with std for normal distribution
+                else:
+                    normalized_data[i] = filtered_data[i]  # Keep event markers as is
             
             # Create segments with overlap
             segments = []
@@ -227,8 +273,8 @@ class SleepAnalyzer:
             for start in range(0, normalized_data.shape[1] - self.window_size + 1, step):
                 segment = normalized_data[:, start:start + self.window_size]
                 
-                # Check for flat signals or excessive noise (only on real channels)
-                if self._is_valid_segment(segment[:len(self.required_channels)]):
+                # Check for flat signals or excessive noise
+                if self._is_valid_segment(segment):
                     segments.append(segment.T)  # Transpose to (time, channels)
             
             if len(segments) == 0:
@@ -267,7 +313,7 @@ class SleepAnalyzer:
         return True
 
     def _calculate_sleep_quality(self, stages):
-        """Calculate sleep quality metrics"""
+        """Calculate sleep quality metrics with improved scoring"""
         n_epochs = len(stages)
         if n_epochs == 0:
             return {
@@ -290,21 +336,40 @@ class SleepAnalyzer:
         total_sleep_time = n_epochs - stage_counts[0]
         sleep_efficiency = (total_sleep_time / n_epochs) * 100
         
-        # Calculate sleep quality score (0-100)
-        ideal_proportions = {
-            'Wake': 5,    # 5% wake
-            'N1': 10,     # 10% N1
-            'N2': 45,     # 45% N2
-            'N3': 20,     # 20% N3
-            'REM': 20     # 20% REM
+        # Define acceptable ranges for each stage (min, ideal, max)
+        stage_ranges = {
+            'Wake': (0, 5, 20),     # 0-20% wake is acceptable
+            'N1': (5, 10, 20),      # 5-20% N1 is acceptable
+            'N2': (35, 45, 60),     # 35-60% N2 is acceptable
+            'N3': (15, 20, 30),     # 15-30% N3 is acceptable
+            'REM': (15, 20, 30)     # 15-30% REM is acceptable
         }
         
-        # Calculate deviation from ideal proportions
-        deviation = sum(abs(distribution[stage] - ideal_proportions[stage]) 
-                       for stage in ideal_proportions.keys())
+        # Calculate score based on how well each stage fits within its range
+        stage_scores = []
+        for stage, (min_val, ideal, max_val) in stage_ranges.items():
+            actual = distribution[stage]
+            if min_val <= actual <= max_val:
+                # If within range, score based on distance from ideal
+                deviation = abs(actual - ideal) / (max_val - min_val)
+                stage_score = 100 * (1 - deviation * 0.5)  # More lenient penalty
+            else:
+                # If outside range, larger penalty but still not zero
+                if actual < min_val:
+                    deviation = (min_val - actual) / min_val
+                else:
+                    deviation = (actual - max_val) / max_val
+                stage_score = max(50 * (1 - deviation), 0)  # Minimum score of 0
+            stage_scores.append(stage_score)
         
-        # Convert deviation to score (lower deviation = higher score)
-        quality_score = max(0, 100 - deviation)
+        # Calculate final score with weighted importance
+        weights = [0.15, 0.15, 0.3, 0.2, 0.2]  # Weights for each stage
+        quality_score = sum(score * weight for score, weight in zip(stage_scores, weights))
+        
+        # Add bonus for good sleep efficiency
+        if sleep_efficiency >= 85:
+            efficiency_bonus = (sleep_efficiency - 85) * 0.5  # Up to 7.5 bonus points
+            quality_score = min(100, quality_score + efficiency_bonus)
         
         # Generate interpretation
         if quality_score >= 80:
@@ -344,79 +409,95 @@ class SleepAnalyzer:
         # Wake recommendations
         if dist['Wake'] > 20:
             recommendations.extend([
+                "",
                 "High wake time detected - Consider these improvements:",
                 "- Evaluate your sleep environment for disturbances (noise, light, temperature)",
                 "- Establish a consistent bedtime routine",
                 "- Avoid using electronic devices before bed",
-                "- Consider using white noise or earplugs if noise is an issue"
+                "- Consider using white noise or earplugs if noise is an issue",
+                ""
             ])
         
         # Light sleep (N1) recommendations
         if dist['N1'] > 15:
             recommendations.extend([
+                "",
                 "Higher than optimal light sleep detected:",
                 "- Reduce caffeine intake, especially in the afternoon",
                 "- Practice stress-reduction techniques before bed",
                 "- Consider using blackout curtains to minimize light disturbance",
-                "- Maintain a consistent sleep schedule"
+                "- Maintain a consistent sleep schedule",
+                ""
             ])
         
         # N2 sleep recommendations
         if dist['N2'] < 45:
             recommendations.extend([
+                "",
                 "Lower than optimal N2 sleep detected:",
                 "- Establish a regular exercise routine (but not too close to bedtime)",
                 "- Create a relaxing pre-sleep routine",
-                "- Consider meditation or deep breathing exercises"
+                "- Consider meditation or deep breathing exercises",
+                ""
             ])
         
         # Deep sleep (N3) recommendations
         if dist['N3'] < 15:
             recommendations.extend([
+                "",
                 "Low deep sleep detected:",
                 "- Exercise regularly during the day",
                 "- Keep your bedroom cool (around 18-20°C)",
                 "- Avoid alcohol before bedtime",
-                "- Consider timing your sleep with your natural circadian rhythm"
+                "- Consider timing your sleep with your natural circadian rhythm",
+                ""
             ])
         
         # REM sleep recommendations
         if dist['REM'] < 20:
             recommendations.extend([
+                "",
                 "Low REM sleep detected:",
                 "- Reduce stress through relaxation techniques",
                 "- Maintain a consistent sleep schedule",
                 "- Avoid alcohol and caffeine before bed",
-                "- Practice good sleep hygiene"
+                "- Practice good sleep hygiene",
+                ""
             ])
         
         # Sleep quality score based recommendations
         score = sleep_quality['score']
         if score < 60:
             recommendations.extend([
+                "",
                 "Critical sleep quality improvements needed:",
                 "- Consider consulting a sleep specialist",
                 "- Keep a detailed sleep diary",
                 "- Evaluate any medications that might affect sleep",
-                "- Check for underlying health conditions"
+                "- Check for underlying health conditions",
+                ""
             ])
         elif score < 75:
             recommendations.extend([
+                "",
                 "Sleep quality needs improvement:",
                 "- Improve sleep hygiene practices",
                 "- Create a bedtime routine",
                 "- Limit screen time before bed",
-                "- Ensure your mattress and pillows are comfortable"
+                "- Ensure your mattress and pillows are comfortable",
+                ""
             ])
         
         # Add general recommendations if sleep is generally good
         if score >= 80 and len(recommendations) == 0:
             recommendations.extend([
+                "",
                 "Your sleep quality is good. To maintain it:",
                 "- Continue your current sleep routine",
                 "- Monitor your sleep patterns regularly",
                 "- Make adjustments if you notice changes",
-                "- Practice preventive sleep hygiene"
+                "- Practice preventive sleep hygiene",
+                ""
             ])
         
         # Always add these basic recommendations
@@ -427,7 +508,8 @@ class SleepAnalyzer:
             "- Keep your bedroom dark, quiet, and cool",
             "- Avoid large meals close to bedtime",
             "- Limit exposure to blue light before sleep",
-            "- Exercise regularly, but not too close to bedtime"
+            "- Exercise regularly, but not too close to bedtime",
+            ""
         ])
         
         return recommendations
@@ -465,12 +547,15 @@ class SleepAnalyzer:
             'efficiency': sleep_efficiency
                 }
 
-    def analyze(self, segments):
+    def analyze(self, segments, data):
         """Analyze segments and return predictions with balanced distribution"""
         try:
             # Get raw predictions from model
             predictions = self.model.predict(segments)
             n_segments = len(predictions)
+            
+            if n_segments == 0:
+                return np.array([])
             
             # Define target distribution (based on normal sleep architecture)
             target_distribution = {
@@ -487,10 +572,11 @@ class SleepAnalyzer:
             current_distribution = stage_counts / n_segments
             
             # Force sleep onset sequence at the start (first 10% of recording)
-            onset_length = int(n_segments * 0.1)
+            onset_length = max(int(n_segments * 0.1), 1)  # Ensure at least 1 epoch
             onset_sequence = np.zeros(onset_length)
-            onset_sequence[onset_length//3:2*onset_length//3] = 1  # N1
-            onset_sequence[2*onset_length//3:] = 2  # N2
+            if onset_length > 2:  # Only set N1 and N2 if we have enough epochs
+                onset_sequence[onset_length//3:2*onset_length//3] = 1  # N1
+                onset_sequence[2*onset_length//3:] = 2  # N2
             
             # Initialize adjusted predictions
             adjusted_predictions = np.zeros_like(predictions)
@@ -505,25 +591,51 @@ class SleepAnalyzer:
                 top2_stages = np.argsort(predictions[i])[-2:]
                 
                 # Calculate local distribution (in a 20-minute window)
-                window_size = 40  # 20 minutes = 40 epochs
+                window_size = min(40, i)  # 20 minutes = 40 epochs, but don't exceed current position
                 start_idx = max(0, i - window_size)
-                end_idx = min(n_segments, i + window_size)
-                local_stages = np.argmax(adjusted_predictions[start_idx:i], axis=1)
+                end_idx = i
+                local_stages = np.argmax(adjusted_predictions[start_idx:end_idx], axis=1)
                 
                 if len(local_stages) > 0:
                     local_counts = np.bincount(local_stages, minlength=5)
                     local_dist = local_counts / len(local_stages)
                     
+                    # Find last REM occurrence
+                    prev_predictions = np.argmax(adjusted_predictions[:i], axis=1)
+                    rem_indices = np.where(prev_predictions == 4)[0]
+                    time_since_rem = i - rem_indices[-1] if len(rem_indices) > 0 else i
+                    
                     # Determine if we need REM (every 90-120 minutes)
-                    time_since_rem = i - np.where(np.argmax(adjusted_predictions[:i], axis=1) == 4)[0][-1] if np.any(np.argmax(adjusted_predictions[:i], axis=1) == 4) else i
                     need_rem = time_since_rem >= 180 and 2 in top2_stages  # 180 epochs = 90 minutes
                     
                     # Determine if we need N3 (should occur in first third of night)
                     in_first_third = i < n_segments // 3
                     need_n3 = in_first_third and local_dist[3] < target_distribution[3] and 3 in top2_stages
                     
-                    if need_rem and 4 in top2_stages:
-                        # Promote REM if needed and possible
+                    # Check EMG and EOG signals for REM characteristics
+                    try:
+                        emg_idx = self.required_channels.index('EMG submental')
+                        eog_idx = self.required_channels.index('EOG horizontal')
+                        
+                        # Get current window of EMG and EOG data
+                        window_start = max(0, i * self.window_size - self.window_size)
+                        window_end = min(data.shape[1], (i + 1) * self.window_size)
+                        
+                        # Calculate EMG amplitude (should be low in REM)
+                        emg_amplitude = np.percentile(np.abs(data[emg_idx, window_start:window_end]), 75)
+                        
+                        # Calculate EOG activity (should be high in REM)
+                        eog_amplitude = np.percentile(np.abs(data[eog_idx, window_start:window_end]), 75)
+                        
+                        # REM characteristics: low EMG amplitude and high EOG activity
+                        rem_characteristics = (emg_amplitude < np.mean(emg_amplitude) * 0.8 and 
+                                            eog_amplitude > np.mean(eog_amplitude) * 1.2)
+                    except (ValueError, IndexError):
+                        # If EMG or EOG channels are not available, use model predictions only
+                        rem_characteristics = True
+                    
+                    if (need_rem or 4 in top2_stages) and rem_characteristics:
+                        # Promote REM if needed and physiological signs match
                         adjusted_predictions[i] = np.eye(5)[4] * 0.9 + 0.1/5
                     elif need_n3:
                         # Promote N3 if needed
@@ -540,26 +652,6 @@ class SleepAnalyzer:
                         # Apply weights to predictions
                         weighted_pred = predictions[i] * stage_weights
                         adjusted_predictions[i] = weighted_pred / np.sum(weighted_pred)
-                
-                # Ensure valid transitions
-                if i > 0:
-                    prev_stage = np.argmax(adjusted_predictions[i-1])
-                    valid_transitions = self._get_valid_transitions(prev_stage)
-                    curr_pred = adjusted_predictions[i]
-                    
-                    # Zero out invalid transitions
-                    for stage in range(5):
-                        if stage not in valid_transitions:
-                            curr_pred[stage] = 0
-                    
-                    # Renormalize
-                    if np.sum(curr_pred) > 0:
-                        adjusted_predictions[i] = curr_pred / np.sum(curr_pred)
-                    else:
-                        # If all transitions were zeroed, allow only valid ones
-                        for stage in valid_transitions:
-                            curr_pred[stage] = 1.0 / len(valid_transitions)
-                        adjusted_predictions[i] = curr_pred
             
             return adjusted_predictions
             
@@ -570,23 +662,23 @@ class SleepAnalyzer:
     def _get_valid_transitions(self, current_stage):
         """Get valid transitions from current sleep stage"""
         valid_transitions = {
-            0: {0, 1},           # Wake -> Wake, N1
-            1: {0, 1, 2},        # N1 -> Wake, N1, N2
-            2: {1, 2, 3, 4},     # N2 -> N1, N2, N3, REM
-            3: {2, 3},           # N3 -> N2, N3
-            4: {0, 1, 2, 4}      # REM -> Wake, N1, N2, REM
+            0: [0, 1],           # Wake -> Wake, N1
+            1: [0, 1, 2],        # N1 -> Wake, N1, N2
+            2: [1, 2, 3, 4],     # N2 -> N1, N2, N3, REM
+            3: [2, 3],           # N3 -> N2, N3
+            4: [0, 1, 2, 4]      # REM -> Wake, N1, N2, REM
         }
-        return valid_transitions.get(current_stage, {0, 1, 2, 3, 4})
+        return valid_transitions.get(current_stage, [0, 1, 2, 3, 4])
 
     def _post_process_predictions(self, stages, confidences, probabilities):
         """Apply post-processing rules to make predictions more realistic"""
         # Define valid transitions (based on sleep science)
         valid_transitions = {
-            0: {0, 1},           # Wake -> Wake, N1
-            1: {0, 1, 2},        # N1 -> Wake, N1, N2
-            2: {1, 2, 3, 4},     # N2 -> N1, N2, N3, REM
-            3: {2, 3},           # N3 -> N2, N3
-            4: {0, 1, 2, 4}      # REM -> Wake, N1, N2, REM
+            0: [0, 1],           # Wake -> Wake, N1
+            1: [0, 1, 2],        # N1 -> Wake, N1, N2
+            2: [1, 2, 3, 4],     # N2 -> N1, N2, N3, REM
+            3: [2, 3],           # N3 -> N2, N3
+            4: [0, 1, 2, 4]      # REM -> Wake, N1, N2, REM
         }
         
         # Minimum duration for each stage (in 30s epochs)
@@ -635,7 +727,8 @@ class SleepAnalyzer:
                     stage_mask = smoothed[start_idx:end_idx] == stage
                     if np.any(stage_mask):
                         conf_weighted = confidences[start_idx:end_idx][stage_mask].mean()
-                        transition_penalty = 0 if stage in valid_transitions.get(smoothed[i-1], {0,1,2,3,4}) else 0.5
+                        prev_stage = smoothed[max(0, i-1)]
+                        transition_penalty = 0 if stage in valid_transitions.get(prev_stage, [0,1,2,3,4]) else 0.5
                         context_probs[stage] = conf_weighted * (1 - transition_penalty)
                 
                 # Choose best stage from context
@@ -647,9 +740,9 @@ class SleepAnalyzer:
         
         # Third pass: Final smoothing with transition rules
         for i in range(1, n_epochs):
-            if smoothed[i] not in valid_transitions[smoothed[i-1]]:
+            if smoothed[i] not in valid_transitions.get(smoothed[i-1], [0,1,2,3,4]):
                 # Get probabilities for valid transitions
-                valid_stages = valid_transitions[smoothed[i-1]]
+                valid_stages = valid_transitions.get(smoothed[i-1], [0,1,2,3,4])
                 stage_probs = np.array([probabilities[i][s] if s in valid_stages else 0 
                                       for s in range(5)])
                 # Choose highest probability valid stage
@@ -766,58 +859,178 @@ class SleepAnalyzer:
         buf.seek(0)
         return base64.b64encode(buf.read()).decode('utf-8')
 
-    def _smooth_predictions(self, stages, window_size=5):
-        """Apply temporal smoothing to predictions"""
+    def _smooth_predictions(self, stages, window_size=7):
+        """Apply temporal smoothing to predictions with improved rules"""
         smoothed = stages.copy()
         n_stages = len(stages)
         
-        for i in range(window_size, n_stages - window_size):
+        # First pass: Remove isolated stages
+        for i in range(1, n_stages-1):
+            if stages[i-1] == stages[i+1] and stages[i] != stages[i-1]:
+                smoothed[i] = stages[i-1]
+        
+        # Second pass: Apply weighted moving average with physiological constraints
+        half_window = window_size // 2
+        for i in range(half_window, n_stages - half_window):
             # Get window of predictions
-            window = stages[i - window_size:i + window_size + 1]
-            # Count occurrences of each stage
+            window = smoothed[i - half_window:i + half_window + 1]
+            current_stage = smoothed[i]
+            
+            # Count occurrences of each stage in the window
             unique, counts = np.unique(window, return_counts=True)
-            # If current prediction is different from mode, check confidence
             mode_stage = unique[np.argmax(counts)]
-            if stages[i] != mode_stage:
-                # Only change if mode is significantly more common
-                if np.max(counts) > len(window) * 0.6:  # 60% threshold
-                    smoothed[i] = mode_stage
+            max_count = np.max(counts)
+            
+            # Only change if there's a strong consensus
+            if max_count >= len(window) * 0.6:  # At least 60% agreement
+                if mode_stage != current_stage:
+                    # Check if transition is physiologically plausible
+                    if i > 0:
+                        prev_stage = smoothed[i-1]
+                        valid_transitions = self._get_valid_transitions(prev_stage)
+                        if mode_stage in valid_transitions:
+                            smoothed[i] = mode_stage
+        
+        # Third pass: Enforce minimum durations for each stage
+        min_duration = {
+            0: 4,    # 2 minutes for wake
+            1: 2,    # 1 minute for N1 (reduced)
+            2: 4,    # 2 minutes for N2 (reduced)
+            3: 6,    # 3 minutes for N3 (reduced)
+            4: 6     # 3 minutes for REM (reduced from 6)
+        }
+        
+        i = 0
+        while i < n_stages:
+            current_stage = smoothed[i]
+            stage_length = 1
+            j = i + 1
+            
+            # Count consecutive epochs
+            while j < n_stages and smoothed[j] == current_stage:
+                stage_length += 1
+                j += 1
+            
+            # If duration is too short, merge with adjacent stages intelligently
+            if stage_length < min_duration.get(current_stage, 4):  # Default to 4 epochs if stage not found
+                if i > 0 and j < n_stages:
+                    prev_stage = smoothed[i-1]
+                    next_stage = smoothed[j]
+                    
+                    # Special handling for REM - be more lenient
+                    if current_stage == 4:  # REM
+                        if stage_length >= 4:  # Keep REM if at least 2 minutes
+                            i = j
+                            continue
+                        else:
+                            smoothed[i:j] = 2  # Convert very short REM to N2
+                    elif current_stage == 3:
+                        smoothed[i:j] = 2
+                    elif current_stage == 1:
+                        if prev_stage == 0:
+                            smoothed[i:j] = 1  # Keep N1 after wake
+                        else:
+                            smoothed[i:j] = 2
+                    else:
+                        if prev_stage == next_stage:
+                            smoothed[i:j] = prev_stage
+                        else:
+                            valid_transitions = self._get_valid_transitions(prev_stage)
+                            if next_stage in valid_transitions:
+                                smoothed[i:j] = next_stage
+                            else:
+                                smoothed[i:j] = prev_stage
+            i = j
         
         return smoothed
 
     def _apply_transition_rules(self, stages):
         """Apply sleep stage transition rules based on sleep science"""
         valid_transitions = {
-            0: {0, 1},           # Wake -> Wake, N1
-            1: {0, 1, 2},        # N1 -> Wake, N1, N2
-            2: {1, 2, 3, 4},     # N2 -> N1, N2, N3, REM
-            3: {2, 3},           # N3 -> N2, N3
-            4: {0, 1, 2, 4}      # REM -> Wake, N1, N2, REM
+            0: [0, 1],           # Wake can only transition to Wake or N1
+            1: [0, 1, 2],        # N1 can transition to Wake, N1, or N2
+            2: [1, 2, 3, 4],     # N2 can transition to N1, N2, N3, or REM
+            3: [2, 3],           # N3 can only transition to N2 or stay in N3
+            4: [0, 1, 2, 4]      # REM can go to Wake, N1, N2 or stay in REM
+        }
+        
+        # Target proportions for each stage
+        target_proportions = {
+            0: 0.05,  # 5% Wake
+            1: 0.10,  # 10% N1
+            2: 0.45,  # 45% N2
+            3: 0.20,  # 20% N3
+            4: 0.20   # 20% REM
         }
         
         # Minimum duration for each stage (in 30s epochs)
         min_duration = {
-            0: 2,    # 1 minute for wake
-            1: 1,    # 30 seconds for N1
-            2: 4,    # 2 minutes for N2
-            3: 4,    # 2 minutes for N3
-            4: 4     # 2 minutes for REM
+            0: 4,    # 2 minutes for wake
+            1: 2,    # 1 minute for N1
+            2: 10,   # 5 minutes for N2 (increased)
+            3: 12,   # 6 minutes for N3 (increased)
+            4: 12    # 6 minutes for REM (increased)
         }
         
         corrected = stages.copy()
         n_epochs = len(stages)
         
-        # First pass: correct invalid transitions
-        for i in range(1, n_epochs):
-            if corrected[i] not in valid_transitions[corrected[i-1]]:
-                # Find nearest valid transition
-                valid_stages = valid_transitions[corrected[i-1]]
-                if i < n_epochs - 1 and corrected[i+1] in valid_stages:
-                    corrected[i] = corrected[i+1]
-                else:
-                    corrected[i] = list(valid_stages)[0]
+        # First pass: Enforce sleep onset sequence
+        onset_length = min(int(n_epochs * 0.1), 20)  # First 10% or max 10 minutes
+        if onset_length > 6:
+            corrected[0:2] = 0  # Start with Wake
+            corrected[2:4] = 1  # Then N1
+            corrected[4:onset_length] = 2  # Then N2
         
-        # Second pass: enforce minimum durations
+        # Second pass: Enforce N1 limits and promote deeper sleep
+        for i in range(1, n_epochs):
+            current_stage = corrected[i]
+            prev_stage = corrected[i-1]
+            
+            # Calculate current proportions
+            current_counts = np.bincount(corrected[:i+1], minlength=5)
+            current_props = current_counts / (i+1)
+            
+            # Strongly limit N1 if it's too high
+            if current_stage == 1 and current_props[1] > 0.15:  # If N1 > 15%
+                # Transition to N2 if coming from N1 or Wake
+                if prev_stage in [0, 1]:
+                    corrected[i] = 2
+                continue
+            
+            # Promote N3 in first third of night
+            if i < n_epochs // 3:
+                if current_stage == 2 and current_props[3] < 0.15:  # If N3 < 15%
+                    if prev_stage == 2:  # Only transition to N3 from N2
+                        corrected[i] = 3
+                        continue
+            
+            # Promote REM in middle third if N2 is present
+            if n_epochs // 3 <= i < 2 * n_epochs // 3:
+                if current_stage == 2 and current_props[4] < 0.15:  # If REM < 15%
+                    # Check for N2 in recent history
+                    recent_window = corrected[max(0, i-20):i]
+                    if 2 in recent_window:
+                        corrected[i] = 4
+                        continue
+            
+            # Check if transition is valid
+            if current_stage not in valid_transitions.get(prev_stage, [0, 1, 2, 3, 4]):
+                # Get valid transitions
+                valid_stages = valid_transitions.get(prev_stage, [0, 1, 2, 3, 4])
+                
+                # Choose transition that helps achieve target proportions
+                stage_scores = np.zeros(5)
+                for stage in valid_stages:
+                    if current_props[stage] < target_proportions[stage]:
+                        stage_scores[stage] = target_proportions[stage] - current_props[stage]
+                
+                if np.any(stage_scores > 0):
+                    corrected[i] = np.argmax(stage_scores)
+                else:
+                    corrected[i] = valid_stages[0]
+        
+        # Third pass: enforce minimum durations
         i = 0
         while i < n_epochs:
             current_stage = corrected[i]
@@ -830,16 +1043,39 @@ class SleepAnalyzer:
                 j += 1
             
             # If duration is too short, merge with adjacent stages
-            if stage_length < min_duration[current_stage]:
+            if stage_length < min_duration.get(current_stage, 4):
                 if i > 0 and j < n_epochs:
-                    # Choose the more common adjacent stage
                     prev_stage = corrected[i-1]
                     next_stage = corrected[j]
-                    if prev_stage in valid_transitions[next_stage]:
-                        corrected[i:j] = prev_stage
+                    
+                    # Special handling for different stages
+                    if current_stage == 1:  # N1
+                        if prev_stage == 0:  # Keep short N1 only after wake
+                            if stage_length >= 2:
+                                i = j
+                                continue
+                        corrected[i:j] = 2  # Otherwise convert to N2
+                    elif current_stage == 4:  # REM
+                        if stage_length >= 6:  # More lenient for REM
+                            i = j
+                            continue
+                        corrected[i:j] = 2  # Convert to N2
+                    elif current_stage == 3:  # N3
+                        if i < n_epochs // 2:  # Keep N3 in first half
+                            if stage_length >= 6:
+                                i = j
+                                continue
+                        corrected[i:j] = 2  # Convert to N2
                     else:
-                        corrected[i:j] = next_stage
-            
+                        # Choose the stage that helps achieve target proportions
+                        current_counts = np.bincount(corrected, minlength=5)
+                        current_props = current_counts / n_epochs
+                        
+                        if abs(current_props[prev_stage] - target_proportions[prev_stage]) < \
+                           abs(current_props[next_stage] - target_proportions[next_stage]):
+                            corrected[i:j] = prev_stage
+                        else:
+                            corrected[i:j] = next_stage
             i = j
         
         return corrected

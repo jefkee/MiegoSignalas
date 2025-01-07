@@ -1,0 +1,40 @@
+\section{Eksperimentinis tyrimas}
+\subsection{Eksperimento metodologija}
+
+Eksperimentinio tyrimo pagrindinis tikslas - įvertinti sukurtos miego EEG analizės sistemos efektyvumą ir tikslumą klasifikuojant miego stadijas realiomis sąlygomis. Tyrimas suplanuotas ir atliktas naudojant Sleep-EDF duomenų rinkinį, kuris yra plačiai pripažintas miego tyrimų bendruomenėje kaip etaloninis standartas. Duomenų rinkinys apima 197 polisomnografinius įrašus su ekspertų rankiniu būdu sužymėtomis miego stadijomis.
+
+Eksperimento struktūra sudaryta iš trijų pagrindinių etapų. Pirmajame etape atliktas duomenų paruošimas, kurio metu signalai apdoroti taikant specializuotus filtrus kiekvienam kanalo tipui. EEG signalams pritaikytas 0.5-35 Hz juostinis filtras, EOG signalams - 0.3-10 Hz, o EMG signalams - 10-40 Hz. Kiekvienas signalas normalizuotas taikant z-normalizaciją, taip užtikrinant vienodą signalų amplitudžių skalę tarp skirtingų įrašų.
+
+Antrajame etape vyko modelio apmokymas ir optimizavimas. Duomenų rinkinys padalintas į penkias dalis kryžminiam patikrinimui, kur keturios dalys naudotos apmokymui, o penktoji - testavimui. Šis procesas kartojamas penkis kartus, kiekvieną kartą keičiant testavimo dalį. Toks metodas leido objektyviai įvertinti sistemos gebėjimą apibendrinti ir pritaikyti išmoktus dėsningumus naujiems duomenims.
+
+Trečiajame etape atliktas išsamus sistemos vertinimas, koncentruojantis į tris pagrindinius aspektus:
+
+1. Klasifikavimo tikslumas vertintas naudojant standartines metrikas:
+   - Bendras tikslumas visoms miego stadijoms
+   - F1-balas kiekvienai klasei atskirai
+   - Painiavos matrica perėjimų tarp stadijų analizei
+   - Cohen's kappa koeficientas sutapimui su ekspertų vertinimais
+
+2. Apdorojimo efektyvumas matuotas vertinant:
+   - Vienos nakties įrašo analizės trukmę
+   - Atminties sunaudojimą
+   - Sistemos stabilumą ilgalaikio veikimo metu
+
+3. Rezultatų patikimumas tirtas analizuojant:
+   - Hipnogramų fiziologinį pagrįstumą
+   - Perėjimų tarp stadijų logiškumą
+   - Sugeneruotų rekomendacijų tikslumą
+
+Eksperimento metu ypatingas dėmesys skirtas sistemos atsparumui įvairiems signalų iškraipymams, kurie dažnai pasitaiko klinikiniuose įrašuose. Modelio stabilumas vertintas pridedant skirtingo lygio Gauso triukšmą (nuo 5% iki 20% signalo amplitudės), simuliuojant elektrodų kontakto praradimą (atsitiktiniai signalo nutrūkimai) ir kitus realius artefaktus.
+
+Vertinant rezultatus, didžiausias dėmesys skirtas N1 stadijos klasifikavimo kokybei, kuri tradiciškai yra sudėtingiausia automatinėms sistemoms dėl jos pereinamojo pobūdžio ir subtilių požymių. Taip pat analizuotas sistemos gebėjimas išlaikyti fiziologiškai įmanomas miego stadijų sekas, vengiant nelogiškų perėjimų (pvz., tiesioginio perėjimo iš N3 į REM). 
+
+Vartotojo sąsajos realizacija paremta klasikine internetinės aplikacijos architektūra, apjungiant dinaminį JavaScript funkcionalumą src/web/frontend/ kataloge su optimizuotu statiniu turinio pateikimu src/web/static/ aplinkoje. Sistemos priekinės dalies architektūra sukurta siekiant maksimalaus našumo ir prieinamumo, išnaudojant standartines naršyklių technologijas.
+
+FileUpload modulis realizuoja pažangų duomenų įkėlimo mechanizmą, kuris priima EDF formato failus ir realiu laiku validuoja jų struktūrą naudodamas standartinį HTML5 File API. Įkėlimo procesas vykdomas asinchroniškai per XMLHttpRequest, leidžiant vartotojui stebėti progresą ir gauti momentinį grįžtamąjį ryšį apie galimas klaidas. Modulis automatiškai atpažįsta polisomnografinių įrašų formatą, tikrindamas būtinų EEG kanalų buvimą ir signalų charakteristikas.
+
+AnalysisResults modulis įgyvendina duomenų vizualizaciją naudodamas matplotlib biblioteką serverio pusėje. Hipnogramos ir kiti grafiniai elementai generuojami kaip statiniai paveikslėliai, kurie konvertuojami į base64 formatą prieš pateikiant naršyklėje. Spektrinės analizės rezultatai ir miego stadijų statistika pateikiami optimizuotoje lentelių struktūroje, užtikrinant greitą duomenų pateikimą ir efektyvų naršyklės resursų panaudojimą.
+
+Sąsajos stilistika, apibrėžta style.css faile, sukuria profesionalią ir šiuolaikišką darbo aplinką. Tamsiai mėlynos ir pilkos spalvos tonai užtikrina optimalų kontrastą, o šrifto hierarchija padeda greitai identifikuoti svarbiausią informaciją. Interaktyvūs elementai, tokie kaip mygtukai ir slankikliai, turi subtilias animacijas, suteikiančias natūralų atsako pojūtį.
+
+Papildoma funkcionalumo logika, implementuota main.js faile, valdo dinaminius sąsajos elementus. Sistema automatiškai prisitaiko prie įvairių ekrano dydžių, išlaikydama optimalų elementų išdėstymą tiek kompiuterių monitoriuose, tiek planšetiniuose įrenginiuose. Klaidų pranešimai pateikiami kontekstiniais pranešimais, nurodančiais konkrečias problemas ir galimus sprendimo būdus. 
